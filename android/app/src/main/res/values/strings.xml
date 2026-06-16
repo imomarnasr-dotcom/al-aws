@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AlAws</string>
+    <string name="title_activity_main">AlAws</string>
+    <string name="package_name">com.alaws.app</string>
+    <string name="custom_url_scheme">com.alaws.app</string>
+</resources>
