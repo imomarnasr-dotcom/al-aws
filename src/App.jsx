@@ -999,14 +999,7 @@ const App = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (currentUser && !currentUser.role) {
-      let wallets = {};
-      try { wallets = JSON.parse(localStorage.getItem('moo_wallets')) || {}; } catch { wallets = {}; }
-      wallets[currentUser.id || 'AWS-2024-0001'] = studentBalance;
-      localStorage.setItem('moo_wallets', JSON.stringify(wallets));
-    }
-  }, [studentBalance, currentUser]);
+  // Removed: auto-saving studentBalance on mount overrides DB balance with 0
 
 
   useEffect(() => {

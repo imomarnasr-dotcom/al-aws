@@ -36,7 +36,11 @@ const DashboardView = ({ studentData, searchQuery, onNavigateToSchedule }) => {
   // ✅ الـ state أولاً قبل أي useMemo يستخدمها
   const [currentTime, setCurrentTime] = useState(new Date());
   const [globalExams, setGlobalExams] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('moo_tests') || localStorage.getItem('exams') || '[]'); } catch { return []; }
+    try { 
+      const t1 = JSON.parse(localStorage.getItem('moo_tests') || '[]');
+      const t2 = JSON.parse(localStorage.getItem('exams') || '[]');
+      return [...t1, ...t2];
+    } catch { return []; }
   });
   const getAcademicLessons = () => {
     try { return JSON.parse(localStorage.getItem('GLOBAL_ACADEMIC_MASTER') || '{}').lessons || []; } catch { return []; }
@@ -46,7 +50,11 @@ const DashboardView = ({ studentData, searchQuery, onNavigateToSchedule }) => {
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     const handleStorage = () => {
-      try { setGlobalExams(JSON.parse(localStorage.getItem('moo_tests') || localStorage.getItem('exams') || '[]')); } catch { }
+      try { 
+        const t1 = JSON.parse(localStorage.getItem('moo_tests') || '[]');
+        const t2 = JSON.parse(localStorage.getItem('exams') || '[]');
+        setGlobalExams([...t1, ...t2]);
+      } catch { }
       setAcademicLessons(getAcademicLessons());
     };
     window.addEventListener('storage', handleStorage);

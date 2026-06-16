@@ -230,9 +230,16 @@ const minutesToTime = (mins) => {
 
 export const getGlobalMaster = () => {
     try {
-        const master = localStorage.getItem('GLOBAL_ACADEMIC_MASTER');
-        return master ? JSON.parse(master) : { lessons: [], settings: { firstLessonStart: '08:00', lessonDuration: 45, lessonsPerDay: 7, breakAfterPeriod: 4, breakDuration: 30 }, classes: [] };
-    } catch { return { lessons: [], settings: { firstLessonStart: '08:00', lessonDuration: 45, lessonsPerDay: 7, breakAfterPeriod: 4, breakDuration: 30 }, classes: [] }; }
+        const masterStr = localStorage.getItem('GLOBAL_ACADEMIC_MASTER');
+        const parsed = masterStr ? JSON.parse(masterStr) : {};
+        return {
+            lessons: Array.isArray(parsed.lessons) ? parsed.lessons : [],
+            settings: parsed.settings || { firstLessonStart: '08:00', lessonDuration: 45, lessonsPerDay: 7, breakAfterPeriod: 4, breakDuration: 30 },
+            classes: Array.isArray(parsed.classes) ? parsed.classes : []
+        };
+    } catch { 
+        return { lessons: [], settings: { firstLessonStart: '08:00', lessonDuration: 45, lessonsPerDay: 7, breakAfterPeriod: 4, breakDuration: 30 }, classes: [] }; 
+    }
 };
 
 export const SyncAll = (newMaster) => {
