@@ -15,7 +15,14 @@ class AppStorage {
       'moo_compact_mode', 
       'moo_last_login',
       'moo_local_preferences',
-      'moo_auto_attendance_enabled'
+      'moo_auto_attendance_enabled',
+      'moo_currentUser',
+      'moo_currentPage',
+      'moo_admin_credentials',
+      'moo_active_exam_state',
+      'moo_magic_cursor',
+      'moo_theme_primary',
+      'moo_theme_bg'
     ];
 
     // Preload everything from the real localStorage to prevent data loss on first migration
