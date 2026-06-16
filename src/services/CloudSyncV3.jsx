@@ -10,9 +10,9 @@ const GENERAL_KEYS = [
   'moo_cart', 'moo_complaints', 'moo_dismissed_results', 'moo_exams_migrated',
   'moo_global_schedule', 'moo_grace_periods', 'moo_graduates', 'moo_hidden_announcements',
   'moo_holidays', 'moo_notifications', 'moo_paper_exam_archive', 'moo_paper_exam_grades',
-  'moo_parent_notifications', 'moo_phases', 'moo_pinned_badges', 'moo_question_bank',
+  'moo_phases', 'moo_pinned_badges', 'moo_question_bank',
   'moo_saturday_enabled', 'moo_school_vault', 'moo_spent_points', 'moo_staff',
-  'moo_store_purchases', 'moo_student_notifications', 'moo_tests', 'moo_truancy_penalized',
+  'moo_store_purchases', 'moo_tests', 'moo_truancy_penalized',
   'moo_wallet_transactions', 'moo_wallets', 'moo_young_classes', 'schoolMasterSchedule',
   'schoolTemplate', 'moo_attendance_periods'
 ];
@@ -24,7 +24,9 @@ const PARTITIONED_COLLECTIONS = {
   'moo_daily_attendance_manual': 'manual_attendance',
   'moo_grades': 'grades',
   'moo_behavior_logs': 'behavior_logs',
-  'moo_achievements': 'achievements'
+  'moo_achievements': 'achievements',
+  'moo_student_notifications': 'student_notifications',
+  'moo_parent_notifications': 'parent_notifications'
 };
 
 export default function CloudSyncV3({ onReady }) {

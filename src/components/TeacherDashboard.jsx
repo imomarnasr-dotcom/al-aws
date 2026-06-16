@@ -1133,10 +1133,16 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
   const performSubmitAttendance = (timesToMark) => {
     const attendanceHistory = JSON.parse(localStorage.getItem('moo_attendance') || '{}');
     const attendancePeriods = JSON.parse(localStorage.getItem('moo_attendance_periods') || '{}');
+    const studentNotifs = JSON.parse(localStorage.getItem('moo_student_notifications') || '{}');
+    const parentNotifs = JSON.parse(localStorage.getItem('moo_parent_notifications') || '{}');
+    
     const recordKey = `${attendanceClass}_${attendanceDate}`;
     const classStudents = students.filter(s => s.className?.trim() === attendanceClass?.trim());
 
+    const safeTimes = Array.isArray(timesToMark) ? timesToMark : [attendanceTime];
+
     const todayRecord = { __enrolled: classStudents.map(s => s.id) };
+    
     classStudents.forEach(s => {
       if (s.isExempted) {
         todayRecord[s.id] = ATTENDANCE_STATUS.EXEMPTED;
@@ -1144,14 +1150,52 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
         const isPres = attendanceMap[s.id] !== false && attendanceMap[s.id] !== 'ABSENT';
         if (!isPres) {
           todayRecord[s.id] = ATTENDANCE_STATUS.ABSENT;
+          
+          // --- AUTOMATED NOTIFICATIONS ---
+          safeTimes.forEach(t => {
+            const notifId = `auto_absent_${attendanceDate}_${t}_${s.id}`;
+            const message = `تم تسجيل غيابك في الحصة (${t || 'الأساسية'}) بتاريخ ${attendanceDate}. يرجى الانضباط لتجنب خصم النقاط.`;
+            const parentMessage = `تم تسجيل غياب الطالب/ة (${s.name}) في الحصة (${t || 'الأساسية'}) بتاريخ ${attendanceDate}.`;
+            
+            const createNotif = (msg, from) => ({
+              id: notifId,
+              title: 'إشعار غياب',
+              message: msg,
+              time: 'الآن',
+              date: new Date().toISOString(),
+              isNew: true,
+              read: false,
+              type: 'system',
+              from: from
+            });
+
+            // Add to Student
+            if (!studentNotifs[s.id]) studentNotifs[s.id] = [];
+            // Remove old if exists (idempotency)
+            studentNotifs[s.id] = studentNotifs[s.id].filter(n => n.id !== notifId);
+            studentNotifs[s.id].unshift(createNotif(message, 'نظام الحضور'));
+
+            // Add to Parent
+            if (!parentNotifs[s.id]) parentNotifs[s.id] = [];
+            parentNotifs[s.id] = parentNotifs[s.id].filter(n => n.id !== notifId);
+            parentNotifs[s.id].unshift(createNotif(parentMessage, 'شؤون الطلاب'));
+          });
+        } else {
+          // If marked present, remove any previous automated absence notifications for these periods
+          safeTimes.forEach(t => {
+            const notifId = `auto_absent_${attendanceDate}_${t}_${s.id}`;
+            if (studentNotifs[s.id]) studentNotifs[s.id] = studentNotifs[s.id].filter(n => n.id !== notifId);
+            if (parentNotifs[s.id]) parentNotifs[s.id] = parentNotifs[s.id].filter(n => n.id !== notifId);
+          });
         }
       }
     });
 
     attendanceHistory[recordKey] = todayRecord;
     localStorage.setItem('moo_attendance', JSON.stringify(attendanceHistory));
+    localStorage.setItem('moo_student_notifications', JSON.stringify(studentNotifs));
+    localStorage.setItem('moo_parent_notifications', JSON.stringify(parentNotifs));
 
-    const safeTimes = Array.isArray(timesToMark) ? timesToMark : [attendanceTime];
     safeTimes.forEach(t => {
       if (t) {
         attendancePeriods[`${attendanceClass}_${attendanceDate}_${t}`] = todayRecord;
