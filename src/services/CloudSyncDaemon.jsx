@@ -50,6 +50,7 @@ const STORE_KEYS = [
 
 export default function CloudSyncDaemon() {
   const isSyncingFromCloud = useRef(false);
+  const debounceTimers = useRef({});
 
   useEffect(() => {
     // 1. Listen to Firebase 'system_data_v2' collection and update LocalStorage
@@ -74,6 +75,9 @@ export default function CloudSyncDaemon() {
         let changed = false;
 
         snapshot.docChanges().forEach((change) => {
+          // Ignore our own local writes echoing back
+          if (change.doc.metadata.hasPendingWrites) return;
+
           // We process added or modified documents
           if (change.type === 'added' || change.type === 'modified') {
             const key = change.doc.id;
@@ -82,7 +86,8 @@ export default function CloudSyncDaemon() {
               const localVal = localStorage.getItem(key);
               
               if (localVal !== cloudVal && cloudVal !== undefined) {
-                localStorage.setItem(key, cloudVal);
+                // Bypass our interceptor
+                originalSetItem.call(localStorage, key, cloudVal);
                 changed = true;
               }
             }
@@ -108,16 +113,25 @@ export default function CloudSyncDaemon() {
       originalSetItem.apply(this, arguments);
       
       if (!isSyncingFromCloud.current && STORE_KEYS.includes(key)) {
-        // Push this specific key to its own document instantly
-        setDoc(doc(db, 'system_data_v2', key), {
-          value: value
-        }, { merge: true }).catch(err => console.error(`Cloud Upload Error for ${key}:`, err));
+        // Debounce: Wait 2 seconds before pushing to cloud.
+        // This prevents freezing the browser and overriding simultaneous small edits.
+        if (debounceTimers.current[key]) {
+          clearTimeout(debounceTimers.current[key]);
+        }
+        
+        debounceTimers.current[key] = setTimeout(() => {
+          setDoc(doc(db, 'system_data_v2', key), {
+            value: value
+          }, { merge: true }).catch(err => console.error(`Cloud Upload Error for ${key}:`, err));
+        }, 2000);
       }
     };
 
     return () => {
       unsubscribe();
       localStorage.setItem = originalSetItem;
+      // Clear all timers
+      Object.values(debounceTimers.current).forEach(clearTimeout);
     };
   }, []);
 
