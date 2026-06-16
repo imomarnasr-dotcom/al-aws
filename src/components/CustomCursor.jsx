@@ -2,13 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 const CustomCursor = () => {
-const [mousePosition, setMousePosition] = useState({ x: -100, y: -100 });
+  const [mousePosition, setMousePosition] = useState({ x: -100, y: -100 });
   const [isHovering, setIsHovering] = useState(false);
-  const [isEnabled, setIsEnabled] = useState(localStorage.getItem('moo_magic_cursor') !== 'false');
+  const [isEnabled, setIsEnabled] = useState(() => {
+    const saved = localStorage.getItem('moo_magic_cursor');
+    if (saved !== null) return saved === 'true';
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    return !isTouch; // default false on mobile, true on desktop
+  });
 
   useEffect(() => {
     const handleToggle = () => {
-      setIsEnabled(localStorage.getItem('moo_magic_cursor') !== 'false');
+      const saved = localStorage.getItem('moo_magic_cursor');
+      if (saved !== null) {
+        setIsEnabled(saved === 'true');
+      } else {
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        setIsEnabled(!isTouch);
+      }
     };
     window.addEventListener('magic_cursor_toggled', handleToggle);
     return () => window.removeEventListener('magic_cursor_toggled', handleToggle);

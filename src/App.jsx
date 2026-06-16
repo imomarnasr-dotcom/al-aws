@@ -76,7 +76,7 @@ export const STORE_ITEMS = [
 
 /* --- Preloader (شاشة الدخول السينمائية) --- */
 const Preloader = () => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Auto-fix Mojibake
@@ -225,7 +225,7 @@ const SkeletonLoader = () => (
 );
 
 /* --- Notifications Dropdown --- */
-const NotificationDropdown = ({ notifications, onMarkAllRead, onClose }) => (
+const NotificationDropdown = ({ notifications, onMarkAllRead, onDeleteNotification, onClose }) => (
   <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
     <div className="relative bg-white rounded-[40px] p-8 max-w-md w-full shadow-2xl my-auto animate-scale-in" onClick={e => e.stopPropagation()}>
@@ -242,13 +242,25 @@ const NotificationDropdown = ({ notifications, onMarkAllRead, onClose }) => (
       <div className="max-h-[50vh] overflow-y-auto divide-y divide-gray-50 pr-2">
         {notifications.length > 0 ? (
           notifications.map((n) => (
-            <div key={n.id} onClick={() => { if(n.action === 'open_store') { window.dispatchEvent(new CustomEvent('moo-open-store')); onClose(); } }} className={`p-4 flex gap-4 transition-colors cursor-pointer rounded-2xl mt-2 ${n.action === 'open_store' ? 'hover:bg-indigo-50 border border-indigo-100 bg-indigo-50/30' : 'hover:bg-gray-50/50'}`}>
-              <span className="text-2xl">{n.icon || '🔔'}</span>
-              <div className="flex-1">
-                <p className="font-bold text-sm text-gray-800 mb-1">{n.title}</p>
-                <p className="text-xs text-gray-500 leading-relaxed">{n.description}</p>
-                <span className="text-[10px] text-gray-400 mt-2 block font-medium">{n.time}</span>
+            <div key={n.id} className={`p-4 flex gap-4 transition-colors rounded-2xl mt-2 relative group ${n.action === 'open_store' ? 'border border-indigo-100 bg-indigo-50/30' : 'hover:bg-gray-50/50'}`}>
+              <div 
+                className="flex-1 flex gap-4 cursor-pointer"
+                onClick={() => { if(n.action === 'open_store') { window.dispatchEvent(new CustomEvent('moo-open-store')); onClose(); } }}
+              >
+                <span className="text-2xl">{n.icon || '🔔'}</span>
+                <div className="flex-1 pr-8">
+                  <p className="font-bold text-sm text-gray-800 mb-1">{n.title}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed">{n.description}</p>
+                  <span className="text-[10px] text-gray-400 mt-2 block font-medium">{n.time}</span>
+                </div>
               </div>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onDeleteNotification && onDeleteNotification(n.id); }}
+                className="absolute top-4 left-4 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                title="حذف الإشعار"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           ))
         ) : (
@@ -1088,6 +1100,18 @@ const App = () => {
     setShowNotifications(false);
   }, [currentUser]);
 
+  const handleDeleteNotification = useCallback((notificationId) => {
+    try {
+      const store = JSON.parse(localStorage.getItem('moo_student_notifications') || '{}');
+      const id = currentUser?.id;
+      if (id && store[id]) {
+        store[id] = store[id].filter(n => n.id !== notificationId);
+        localStorage.setItem('moo_student_notifications', JSON.stringify(store));
+        setSyncTrigger(prev => prev + 1);
+      }
+    } catch { /* ignore */ }
+  }, [currentUser]);
+
   const handleNavigate = (page, user) => {
     setCurrentPage(page);
     if (user) setCurrentUser(user);
@@ -1145,12 +1169,7 @@ const App = () => {
       if (relevantGeneralNotifs.length > 0) {
         const updatedStore = { ...store, [currentUser.id]: syncedNotifications.slice(0, 50) };
         localStorage.setItem('moo_student_notifications', JSON.stringify(updatedStore));
-        // نحذف الإشعارات العامة اللي اتدمجت عشان ما تتكررش
-        const remaining = generalNotifs.filter(n =>
-          n.targetType === 'teacher' || n.targetInstructor || n.to || // خاص بمعلم — نحتفظ بيه
-          (n.targetClass && myClass && n.targetClass !== myClass) // مش فصله — نحتفظ بيه
-        );
-        localStorage.setItem('moo_notifications', JSON.stringify(remaining));
+        // لا نقوم بحذف الإشعارات من moo_notifications لتصل لباقي الطلاب
       }
     } catch {
       syncedNotifications = [];
@@ -1265,6 +1284,7 @@ const App = () => {
             <NotificationDropdown
               notifications={(student?.notifications || []).filter(n => n.targetType !== 'teacher' && !n.to && !n.targetInstructor && !n.title?.includes('رصد غياب'))}
               onMarkAllRead={handleMarkAllRead}
+              onDeleteNotification={handleDeleteNotification}
               onClose={() => setShowNotifications(false)}
             />
           )}

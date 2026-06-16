@@ -78,7 +78,12 @@ const [theme, setTheme] = useState({
     bg: document.documentElement.style.getPropertyValue('--bg-color') || '#F8F9FA'
   });
 
-  const [magicCursor, setMagicCursor] = useState(localStorage.getItem('moo_magic_cursor') !== 'false');
+  const [magicCursor, setMagicCursor] = useState(() => {
+    const saved = localStorage.getItem('moo_magic_cursor');
+    if (saved !== null) return saved === 'true';
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    return !isTouch;
+  });
 
   const toggleMagicCursor = () => {
     const newVal = !magicCursor;

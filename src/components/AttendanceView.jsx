@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Clock, AlertTriangle, QrCode, RefreshCw } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { QRCodeSVG } from 'qrcode.react';
+import { calculateStudentAttendance } from '../utils/dataManager';
 
 /* ─── بطاقة QR حقيقية قابلة للمسح بكاميرا المعلم (Html5Qrcode) ─── */
 const QRCard = ({ student }) => {
@@ -49,7 +50,11 @@ const AttendanceView = ({ studentData, searchQuery }) => {
   useEffect(() => {
     const onStorage = () => setSyncTrigger(prev => prev + 1);
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('moo-sync', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('moo-sync', onStorage);
+    };
   }, []);
 
   // قراءة سجل الحضور الحقيقي من moo_attendance
@@ -57,18 +62,18 @@ const AttendanceView = ({ studentData, searchQuery }) => {
     try { return JSON.parse(localStorage.getItem('moo_attendance') || '{}'); } catch { return {}; }
   }, [syncTrigger]);
 
-  // حساب نسبة الحضور من moo_whitelist
+  // حساب نسبة الحضور باستخدام الدالة الدقيقة
   const { totalClasses, attendedClasses, attendancePercentage } = useMemo(() => {
     try {
-      const whitelist = JSON.parse(localStorage.getItem('moo_whitelist') || '[]');
-      const me = whitelist.find(s => s.id === student.id);
-      if (me) return {
-        totalClasses: me.totalClasses || 0,
-        attendedClasses: me.attendedClasses || 0,
-        attendancePercentage: me.attendancePercentage || 0,
+      const stat = calculateStudentAttendance(student.id);
+      return {
+        totalClasses: stat.total || 0,
+        attendedClasses: stat.present || 0,
+        attendancePercentage: stat.percentage || 0,
       };
-    } catch { }
-    return { totalClasses: 0, attendedClasses: 0, attendancePercentage: 0 };
+    } catch { 
+      return { totalClasses: 0, attendedClasses: 0, attendancePercentage: 0 };
+    }
   }, [student.id, syncTrigger]);
 
   // سجل الغياب التفصيلي (أيام غاب فيها الطالب)

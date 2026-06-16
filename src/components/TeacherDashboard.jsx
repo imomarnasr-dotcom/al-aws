@@ -1,4 +1,5 @@
 import { LogOut, Calendar, Clock, BookOpen, Trash2, X, Users, ClipboardCheck, FileText, Lock, AlertCircle, Bell, Plus, Save, CheckCircle2, Edit2, Search, Megaphone, BarChart2, Download, ArrowLeft, Menu } from 'lucide-react';
+import { safeMobileDownload } from '../utils/downloadUtils';
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getGlobalMaster, SyncAll, getTeacherNotifications, sendSwapRequest, executeSwap, rejectSwap, ATTENDANCE_STATUS, calculateStudentAttendance } from '../utils/dataManager';
@@ -618,7 +619,8 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'الدرجات');
-    XLSX.writeFile(wb, `درجات_${exportData.title}_${exportData.className}.xlsx`);
+    const b64 = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+    safeMobileDownload(b64, `درجات_${exportData.title}_${exportData.className}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     showToast('✅ تم تحميل ملف Excel بنجاح!');
   };
 
@@ -692,10 +694,7 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       
       // تحميل
       const image = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `درجات_${exportData.title}_${exportData.className}.png`;
-      link.click();
+      safeMobileDownload(image, `درجات_${exportData.title}_${exportData.className}.png`, 'image/png');
       showToast('✅ تم تحميل الصورة!');
     }, 100);
   };
@@ -724,7 +723,8 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(fileName + '.pdf');
+      const pdfBase64 = pdf.output('datauristring');
+      safeMobileDownload(pdfBase64, fileName + '.pdf', 'application/pdf');
       showToast('✅ تم التصدير بنجاح');
     } catch (err) {
       console.error(err);
@@ -969,7 +969,8 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     XLSX.utils.book_append_sheet(wb, ws, 'النتائج');
 
     // حفظ الملف
-    XLSX.writeFile(wb, `نتائج_${exam.title}_${className}.xlsx`);
+    const b64 = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+    safeMobileDownload(b64, `نتائج_${exam.title}_${className}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     showToast('✅ تم تحميل ملف Excel بنجاح!');
     setShowResultsExportDropdown(false);
   };
@@ -1019,14 +1020,11 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       ).join('\n');
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `درجات_${selectedPaperExam.title}_${selectedPaperExam.classCode}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        safeMobileDownload(reader.result, `درجات_${selectedPaperExam.title}_${selectedPaperExam.classCode}.csv`, 'text/csv');
+      };
       showToast('✅ تم تحميل الدرجات بنجاح!');
       return;
     }
@@ -1053,14 +1051,11 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     ).join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `درجات_${gradesClass}_${gradesSubject}_${gradesSemester}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = () => {
+      safeMobileDownload(reader.result, `درجات_${gradesClass}_${gradesSubject}_${gradesSemester}.csv`, 'text/csv');
+    };
     showToast('✅ تم تصدير الدرجات بنجاح!');
   };
 

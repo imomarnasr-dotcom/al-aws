@@ -18,6 +18,18 @@ const ParticlesBackground = ({
     const particlesRef = useRef([]);
     const animationRef = useRef(null);
 
+    const [isMobile, setIsMobile] = React.useState(() => {
+        return window.innerWidth <= 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    });
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth <= 768 || 'ontouchstart' in window || navigator.maxTouchPoints > 0);
+        };
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -117,6 +129,8 @@ const ParticlesBackground = ({
             if (animationRef.current) cancelAnimationFrame(animationRef.current);
         };
     }, [count, color, opacity, speed, size.min, size.max, connection, connectionDistance]);
+
+    if (isMobile) return null;
 
     return (
         <canvas

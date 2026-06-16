@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -11,6 +11,7 @@ import {
   BarChart2, TrendingUp, AlertTriangle, BookOpen, UserCheck, UserX, Bell,
   Download, Upload, Database, Search, Wallet, Menu
 } from 'lucide-react';
+import { safeMobileDownload } from '../utils/downloadUtils';
 
 
 import {
@@ -592,7 +593,7 @@ const AdminDashboard = ({ onLogout, account }) => {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "الطلاب");
-    XLSX.writeFile(wb, "سجل_الطلاب.xlsx");
+    const b64 = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' }); safeMobileDownload(b64, "سجل_الطلاب.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     showToast('✅ تم تصدير بيانات الطلاب بنجاح!');
   };
 

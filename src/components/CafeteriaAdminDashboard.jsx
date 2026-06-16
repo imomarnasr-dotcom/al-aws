@@ -102,8 +102,10 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
     };
     
     window.addEventListener('storage', handleSync);
+    window.addEventListener('moo-sync', handleSync);
     return () => {
       window.removeEventListener('storage', handleSync);
+      window.removeEventListener('moo-sync', handleSync);
     };
   }, []);
 
