@@ -40,25 +40,6 @@ export default defineConfig({
   ],
   build: {
     chunkSizeWarningLimit: 1000,
-    rollupOptions: {
-      output: {
-        // Vite 8 (rolldown) يتطلب function بدلًا من object
-        manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
-            return 'vendor-react';
-          }
-          if (id.includes('node_modules/framer-motion')) {
-            return 'vendor-motion';
-          }
-          if (id.includes('node_modules/xlsx')) {
-            return 'vendor-xlsx';
-          }
-          if (id.includes('node_modules/qrcode') || id.includes('node_modules/react-qr')) {
-            return 'vendor-qr';
-          }
-        },
-      },
-    },
   },
 })
 
