@@ -1,0 +1,130 @@
+Created At: 2026-06-13T04:41:48Z
+Completed At: 2026-06-13T04:41:49Z
+
+				The command completed successfully.
+				Output:
+				<truncated 496 lines>
+  src\App.jsx:1365:            {!hideStudentUI && (
+  src\App.jsx:1366:              <MobileNav activeNav={currentPage} setActiveNav={setCurrentPage} />
+  src\App.jsx:1367:            )}
+  src\App.jsx:1368:
+  src\App.jsx:1369:            <main className={`flex-1 overflow-y-auto transition-all duration-500 ${hideStudentUI ? 
+'' : 'p-6 lg:p-8 pb-24 lg:pb-8'}`}>
+  src\App.jsx:1370:              <div className="max-w-7xl mx-auto h-full">
+  src\App.jsx:1371:                {isLoading && !hideStudentUI && <SkeletonLoader />}
+  src\App.jsx:1372:
+  src\App.jsx:1373:                {/* ?? � �꟞� � �奟� */}
+  src\App.jsx:1374:                {!isLoading && (
+  src\App.jsx:1375:                  <AnimatePresence mode="wait">
+  src\App.jsx:1376:                    <motion.div
+  src\App.jsx:1377:                      key={currentPage}
+  src\App.jsx:1378:                      initial={{ opacity: 0, y: 20 }}
+  src\App.jsx:1379:                      animate={{ opacity: 1, y: 0 }}
+  src\App.jsx:1380:                      exit={{ opacity: 0, y: -20 }}
+  src\App.jsx:1381:                      transition={{ duration: 0.4 }}
+  src\App.jsx:1382:                      className="h-full"
+  src\App.jsx:1383:                    >
+  src\App.jsx:1384:                      {currentPage === 'landing' && <LandingPage onNavigate={handleNavigate} />}
+  src\App.jsx:1385:                      {currentPage === 'teacher-dashboard' && <TeacherDashboard onLogout={() => 
+setCurrentPage('landing')} currentTeacherUser={currentUser?.username} />}
+  src\App.jsx:1386:                      {currentPage === 'admin' && <AdminDashboard account={currentUser} 
+onLogout={() => setCurrentPage('landing')} />}
+  src\App.jsx:1387:                      {currentPage === 'cafeteria-admin' && <CafeteriaAdminDashboard onLogout={() 
+=> setCurrentPage('landing')} />}
+  src\App.jsx:1388:                      {currentPage === 'parent-dashboard' && <ParentDashboard onLogout={() => 
+setCurrentPage('landing')} studentData={currentUser} />}
+  src\App.jsx:1389:
+  src\App.jsx:1390:                      {!hideStudentUI && (
+  src\App.jsx:1391:                        <>
+  src\App.jsx:1392:                          <ExamResultNotification student={student} />
+  src\App.jsx:1393:                          {/* � �: � handleSetStudentData � onNavigateToSchedule 
+*/}
+  src\App.jsx:1394:                          {/* ?? �韥: �럢 � � � �奟� � */}
+  src\App.jsx:1395:                          <AnnouncementBanner />
+  src\App.jsx:1396:                          {currentPage === 'home' && <DashboardView studentData={student} 
+searchQuery={searchQuery} onNavigateToSchedule={() => setCurrentPage('schedule')} />}
+  src\App.jsx:1397:                          {currentPage === 'schedule' && <ScheduleView studentData={student} 
+searchQuery={searchQuery} />}
+  src\App.jsx:1398:                          {currentPage === 'exams' && <ExamsView studentData={student} 
+setStudentData={handleSetStudentData} searchQuery={searchQuery} />}
+  src\App.jsx:1399:                          {currentPage === 'grades' && <GradesView studentData={student} 
+searchQuery={searchQuery} />}
+  src\App.jsx:1400:                          {currentPage === 'attendance' && <AttendanceView studentData={student} 
+searchQuery={searchQuery} />}
+  src\App.jsx:1401:                          {currentPage === 'cafeteria' && (
+  src\App.jsx:1402:                            <CafeteriaView 
+  src\App.jsx:1403:                              studentData={student} 
+  src\App.jsx:1404:                              cart={cart} 
+  src\App.jsx:1405:                              setCart={setCart} 
+  src\App.jsx:1406:                              searchQuery={searchQuery} 
+  src\App.jsx:1407:                              studentBalance={studentBalance}
+  src\App.jsx:1408:                            />
+  src\App.jsx:1409:                          )}
+  src\App.jsx:1410:                          {currentPage === 'settings' && <SettingsView studentData={student} 
+setStudentData={handleSetStudentData} searchQuery={searchQuery} onLogout={() => { setCurrentUser(null); 
+setCurrentPage('landing'); }} studentPassword={currentUser?.password} />}
+  src\App.jsx:1411:                        </>
+  src\App.jsx:1412:                      )}
+  src\App.jsx:1413:                    </motion.div>
+  src\App.jsx:1414:                  </AnimatePresence>
+  src\App.jsx:1415:                )}
+  src\App.jsx:1416:              </div>
+  src\App.jsx:1417:            </main>
+  src\App.jsx:1418:          </div>
+  src\App.jsx:1419:        </div>
+  src\App.jsx:1420:
+  src\App.jsx:1421:
+  src\App.jsx:1422:        {/* ?? ꢤ� � �蟧� ? � � � */}
+  src\App.jsx:1423:        {showAcademicStore && (() => {
+  src\App.jsx:1424:          const studentId = student?.personal?.id;
+  src\App.jsx:1425:          const studentClass = student?.personal?.class;
+  src\App.jsx:1426:          
+  src\App.jsx:1427:          const totalPoints = getStudentDynamicPoints(studentId, studentClass);
+  src\App.jsx:1428:          const spentPoints = JSON.parse(localStorage.getItem('moo_spent_points') || 
+'{}')[studentId] || 0;
+  src\App.jsx:1429:          const availablePoints = Math.max(0, totalPoints - spentPoints);
+  src\App.jsx:1430:
+  src\App.jsx:1431:          const purchased = JSON.parse(localStorage.getItem('moo_store_purchases') || 
+'{}')[studentId] || [];
+  src\App.jsx:1432:
+  src\App.jsx:1433:          const handlePurchase = (item) => {
+  src\App.jsx:1434:            if (availablePoints < item.cost) return;
+  src\App.jsx:1435:            if (purchased.includes(item.id)) return;
+  src\App.jsx:1436:
+  src\App.jsx:1437:            if (item.category === 'theme') {
+  src\App.jsx:1438:              document.documentElement.style.setProperty('--primary-color', item.hex);
+  src\App.jsx:1439:              document.documentElement.style.setProperty('--primary-rgb', item.rgb);
+  src\App.jsx:1440:              localStorage.setItem('moo_theme_color', JSON.stringify({ hex: item.hex, rgb: item.rgb 
+}));
+  src\App.jsx:1441:            }
+  src\App.jsx:1442:
+  src\App.jsx:1443:            // � �
+  src\App.jsx:1444:            const allSpent = JSON.parse(localStorage.getItem('moo_spent_points') || '{}');
+  src\App.jsx:1445:            allSpent[studentId] = (allSpent[studentId] || 0) + item.cost;
+  src\App.jsx:1446:            localStorage.setItem('moo_spent_points', JSON.stringify(allSpent));
+  src\App.jsx:1447:
+  src\App.jsx:1448:            // � �ꬢ�
+  src\App.jsx:1449:            const purchases = JSON.parse(localStorage.getItem('moo_store_purchases') || '{}');
+  src\App.jsx:1450:            if (!purchases[studentId]) purchases[studentId] = [];
+  src\App.jsx:1451:            purchases[studentId].push(item.id);
+  src\App.jsx:1452:            localStorage.setItem('moo_store_purchases', JSON.stringify(purchases));
+  src\App.jsx:1453:
+  src\App.jsx:1454:            // �颣� �矞� � � �隩�
+  src\App.jsx:1455:            try {
+  src\App.jsx:1456:              let pinned = JSON.parse(localStorage.getItem('moo_pinned_badges')) || ['� 
+�', '� �', '� �', '� �矩�'];
+  src\App.jsx:1457:              if (!pinned.includes(item.name) && item.category !== 'theme' && item.category !== 
+'frame') {
+  src\App.jsx:1458:                // � � �墩� � � � � �
+  src\App.jsx:1459:                const myBadgesList = JSON.parse(localStorage.getItem('moo_badges') || '[]');
+  src\App.jsx:1460:                const unownedIdx = pinned.findIndex(p => !myBadgesList.includes(p) && 
+!purchases[studentId].some(id => STORE_ITEMS.find(s => s.id === id)?.name === p));
+  src\App.jsx:1461:                if (unownedIdx !== -1) {
+  src\App.jsx:1462:                  pinned[unownedIdx] = item.name;
+  src\App.jsx:1463:                } else {
+  src\App.jsx:1464:                  pinned.unshift(item.name);
+  src\App.jsx:1465:                  pinned = pinned.slice(0, 4);
+  src\App.jsx:1466:                }
+
+
+

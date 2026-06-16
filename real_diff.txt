@@ -1,0 +1,544 @@
+Created At: 2026-06-11T22:59:13Z
+Completed At: 2026-06-11T22:59:49Z
+The following changes were made by the multi_replace_file_content tool to: c:\al aws done\moo_project\src\components\TeacherDashboard.jsx. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -1041,50 +1041,94 @@
+     const n = Number(score);
+     if (n >= 95) return 'A+';
+     if (n >= 90) return 'A';
+-    if (n >= 85) return 'B+';
+-    if (n >= 80) return 'B';
+-    if (n >= 75) return 'C+';
+-    if (n >= 70) return 'C';
+-    if (n >= 65) return 'D+';
+-    if (n >= 60) return 'D';
+-    return 'F';
+-  };
+-
+-  const markAllPresent = () => {
+-    const classStudents = students.filter(s => s.className === attendanceClass && (!s.createdAt || !attendanceDate || s.createdAt <= attendanceDate));
+-    const newMap = { ...attendanceMap };
+-    classStudents.forEach(student => {
+-      newMap[student.id] = true;
+-    });
+-    setAttendanceMap(newMap);
+-  };
+-
+-  const performSubmitAttendance = () => {
+-    const attendanceHistory = JSON.parse(localStorage.getItem('moo_attendance') || '{}');
+-    const recordKey = `${attendanceClass}_${attendanceDate}`;
+-    const classStudents = students.filter(s => s.className === attendanceClass && (!s.createdAt || !attendanceDate || s.createdAt <= attendanceDate));
+-
+-    // ًں”¥ النقطة 1+4: لا نخزّن أرقاماً مجمّعة بعد الآن — نخزّن السجل التفصيلي فقط
+-    // والنسبة تُحسب لحظياً عبر calculateStudentAttendance في كل الشاشات.
+-    // ًں”¥ النقطة 2: الطالب المعفي (isExempted) لا يُسجَّل له غياب إطلاقاً.
+-    const todayRecord = {};
+-    classStudents.forEach(s => {
+-      if (s.isExempted) {
+-        todayRecord[s.id] = ATTENDANCE_STATUS.EXEMPTED;
+-      } else {
+-        const isPres = attendanceMap[s.id] !== false && attendanceMap[s.id] !== 'ABSENT';
+-        todayRecord[s.id] = isPres ? ATTENDANCE_STATUS.PRESENT : ATTENDANCE_STATUS.ABSENT;
+-      }
+-    });
+-    attendanceHistory[recordKey] = todayRecord;
+-    localStorage.setItem('moo_attendance', JSON.stringify(attendanceHistory));
+-
+-    // ًں”¥ نُبقي إحصائيات whitelist محدّثة (لأغراض العرض السريع) لكن محسوبة لحظياً من الدالة المركزية
+-    const refreshedStudents = students.map(s => {
+-      if (s.className !== attendanceClass) return s;
+-      const stat = calculateStudentAttendance(s.id);
+-      return { ...s, totalClasses: stat.total, attendedClasses: stat.present, attendancePercentage: stat.percentage };
+-    });
++      document.body.removeChild(link);
++      URL.revokeObjectURL(url);
++      showToast('✅ تم تحميل الدرجات بنجاح!');
++      return;
++    }
++
++    // حالة 2: الدرجات العادية (تتطلب فصل ومادة)
++    if (!gradesClass || !gradesSubject) return showToast('❌ يرجى تحديد الفصل والمادة أولاً');
++    if (gradesClassStudents.length === 0) return showToast('❌ لا يوجد طلاب لتصديرهم');
++
++    const rows = [
++      // Header
++      ['اسم الطالب', 'رقم الهوية', 'المادة', 'الفصل الدراسي', 'الدرجة / 100', 'التقدير'],
++      // Data
++      ...gradesClassStudents.map(student => {
++        const score = gradesMap[student.id] ?? '';
++        const letter = getGradeLetter(score);
++        return [student.name, student.id, gradesSubject, gradesSemester, score, letter];
++      })
++    ];
++
++    // تحويل لـ CSV مع دعم العربية (BOM للـ Excel)
++    const BOM = '\uFEFF';
++    const csv = BOM + rows.map(row =>
++      row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')
++    ).join('\n');
++
++    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
++    const url = URL.createObjectURL(blob);
++    const link = document.createElement('a');
++    link.href = url;
++    link.download = `درجات_${gradesClass}_${gradesSubject}_${gradesSemester}.csv`;
++    document.body.appendChild(link);
++    link.click();
++    document.body.removeChild(link);
++    URL.revokeObjectURL(url);
++    showToast('✅ تم تصدير الدرجات بنجاح!');
++  };
++
++  const getGradeLetter = (score) => {
++    if (score === '' || score === undefined || score === null) return '-';
++    const n = Number(score);
++    if (n >= 95) return 'A+';
++    if (n >= 90) return 'A';
++    if (n >= 85) return 'B+';
++    if (n >= 80) return 'B';
++    if (n >= 75) return 'C+';
++    if (n >= 70) return 'C';
++    if (n >= 65) return 'D+';
++    if (n >= 60) return 'D';
++    return 'F';
++  };
++
++  const markAllPresent = () => {
++    const classStudents = students.filter(s => s.className === attendanceClass && (!s.createdAt || !attendanceDate || s.createdAt <= attendanceDate));
++    const newMap = { ...attendanceMap };
++    classStudents.forEach(student => {
++      newMap[student.id] = true;
++    });
++    setAttendanceMap(newMap);
++  };
++
++  const performSubmitAttendance = () => {
++    const attendanceHistory = JSON.parse(localStorage.getItem('moo_attendance') || '{}');
++    const recordKey = `${attendanceClass}_${attendanceDate}`;
++    const classStudents = students.filter(s => s.className === attendanceClass && (!s.createdAt || !attendanceDate || s.createdAt <= attendanceDate));
++
++    // ًں”¥ النقطة 1+4: لا نخزّن أرقاماً مجمّعة بعد الآن — نخزّن السجل التفصيلي فقط
++    // والنسبة تُحسب لحظياً عبر calculateStudentAttendance في كل الشاشات.
++    // ًں”¥ النقطة 2: الطالب المعفي (isExempted) لا يُسجَّل له غياب إطلاقاً.
++    const todayRecord = {};
++    classStudents.forEach(s => {
++      if (s.isExempted) {
++        todayRecord[s.id] = ATTENDANCE_STATUS.EXEMPTED;
++      } else {
++        const isPres = attendanceMap[s.id] !== false && attendanceMap[s.id] !== 'ABSENT';
++        todayRecord[s.id] = isPres ? ATTENDANCE_STATUS.PRESENT : ATTENDANCE_STATUS.ABSENT;
++      }
++    });
++    attendanceHistory[recordKey] = todayRecord;
++    localStorage.setItem('moo_attendance', JSON.stringify(attendanceHistory));
++
++    // ًں”¥ نُبقي إحصائيات whitelist محدّثة (لأغراض العرض السريع) لكن محسوبة لحظياً من الدالة المركزية
++    const refreshedStudents = students.map(s => {
++      if (s.className !== attendanceClass) return s;
++      const stat = calculateStudentAttendance(s.id);
++      return { ...s, totalClasses: stat.total, attendedClasses: stat.present, attendancePercentage: stat.percentage };
++    });
+     localStorage.setItem('moo_whitelist', JSON.stringify(refreshedStudents));
+ 
+     const wasGraceMode = !!gracePeriodMode;
+@@ -1092,395 +1092,6 @@
+       const updatedGraces = gracePeriods.map(g => g.id === gracePeriodMode ? { ...g, status: 'pending_admin' } : g);
+       localStorage.setItem('moo_grace_periods', JSON.stringify(updatedGraces));
+       setGracePeriodMode(null);
+-    }
+-
+-    window.dispatchEvent(new Event('storage'));
+-    window.dispatchEvent(new CustomEvent('moo-sync'));
+-    showToast('✅ تم اعتماد الحضور بنجاح!');
+-    setActiveTab(wasGraceMode ? 'attendance' : 'schedule');
+-    setConfirmModalData(null);
+-  };
+-
+-
+-  const submitAttendance = () => {
+-    if (!attendanceClass) return alert('يرجى تحديد الفصل');
+-
+-    const attendanceHistory = JSON.parse(localStorage.getItem('moo_attendance') || '{}');
+-    const recordKey = `${attendanceClass}_${attendanceDate}`;
+-    if (attendanceHistory[recordKey]) {
+-      setConfirmModalData({
+-        title: 'تأكيد تحديث الغياب',
+-        message: `تم تسجيل حضور فصل "${attendanceClass}" بتاريخ ${attendanceDate} مسبقاً. هل تريد تحديثه وتعديله؟`,
+-        onConfirm: performSubmitAttendance
+-      });
+-      return;
+-    }
+-    performSubmitAttendance();
+-  };
+-
+-  useEffect(() => {
+-    const updateData = () => {
+-      const fresh = getGlobalMaster();
+-      setMasterData(fresh);
+-      setGlobalSchedule(fresh.lessons || []);
+-      setNotifications(getTeacherNotifications(teacherProfile.name));
+-      try { setStaff(JSON.parse(localStorage.getItem('moo_staff') || '[]')); } catch { }
+-      try { setStudents(JSON.parse(localStorage.getItem('moo_whitelist') || '[]')); } catch { }
+-    };
+-    updateData();
+-    window.addEventListener('storage', updateData);
+-    window.addEventListener('moo-sync', updateData);
+-    return () => {
+-      window.removeEventListener('storage', updateData);
+-      window.removeEventListener('moo-sync', updateData);
+-    };
+-  }, [teacherProfile.name]);
+-
+-  const handleRemoveSlot = (id) => {
+-    if (!window.confirm('هل أنت متأكد من حذف هذه الحصة؟')) return;
+-    removeSlot(id);
+-    window.dispatchEvent(new CustomEvent('moo-sync'));
+-    showToast('🗑️ تم حذف الحصة');
+-  };
+-
+-  const { GRID_DAYS, masterTimeSlots, getCellState, bookSlot, removeSlot, moveSlot } = useTeacherTable({ teacherProfile, globalSchedule, setGlobalSchedule, selectedClass: isExamScheduleOpen ? newTest.classCode : selectedClassForOverlay });
+-  const myLessons = globalSchedule.filter(l => l.instructor === teacherProfile.name && l.type !== 'break' && !l.isBreak);
+-
+-  return (
+-    <div className="min-h-screen bg-[#F8FAFC] font-main" dir="rtl">
+-
+-      <AnimatePresence>
+-        {toastMsg && (
+-          <motion.div
+-            initial={{ opacity: 0, y: -40, x: '-50%' }}
+-            animate={{ opacity: 1, y: 0, x: '-50%' }}
+-            exit={{ opacity: 0, y: -20, x: '-50%' }}
+-            className="fixed top-6 left-1/2 z-[200] bg-gray-900 text-white px-8 py-4 rounded-full shadow-2xl flex items-center gap-3 text-sm font-bold"
+-          >
+-            {toastMsg}
+-          </motion.div>
+-        )}
+-      </AnimatePresence>
+-
+-      <header className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+-        <div className="flex items-center gap-3">
+-          <div className="w-10 h-10 bg-gray-900 rounded-xl flex items-center justify-center text-white"><BookOpen size={20} /></div>
+-          <div>
+-            <h1 className="text-lg font-black text-gray-900">منصة المعلم</h1>
+-            <p className="text-[10px] text-gray-500 font-bold">{teacherProfile.name}</p>
+-          </div>
+-        </div>
+-
+-        <nav className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-2xl overflow-x-auto whitespace-nowrap [&::-webkit-scrollbar]:hidden">
+-          <button onClick={() => setActiveTab('schedule')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'schedule' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>الجدول والحصص</button>
+-          <button onClick={() => setActiveTab('tests')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'tests' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>منظومة الاختبارات</button>
+-          <button onClick={() => setActiveTab('attendance')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'attendance' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>سجل الحضور</button>
+-          <button onClick={() => setActiveTab('grades')} className={`px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'grades' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>سجل الدرجات</button>
+-          
+-          <button onClick={() => setActiveTab('swaps')} className={`relative px-4 py-2 rounded-xl font-bold text-sm transition-all ${activeTab === 'swaps' ? 'bg-white text-amber-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+-            طلبات التبديل
+-            {notifications.filter(n => n.type === 'swap_request').length > 0 && (
+-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
+-                {notifications.filter(n => n.type === 'swap_request').length}
+-              </span>
+-            )}
+-          </button>
+-        </nav>
+-        <div className="flex items-center gap-6">
+-          <div className="relative">
+-            <button onClick={() => setShowNotifs(!showNotifs)} className="text-gray-600 hover:text-gray-900 mt-1">
+-              <Bell size={24} />
+-              {notifications.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"></span>}
+-            </button>
+-            {showNotifs && (
+-              <div className="absolute left-0 mt-4 w-80 bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 p-4">
+-                <h4 className="font-black text-gray-800 border-b pb-2 mb-3">طلبات تبديل الحصص</h4>
+-                {notifications.length === 0 ? <p className="text-gray-400 text-sm font-bold text-center py-4">لا توجد إشعارات حالياً.</p> : notifications.map(n => (
+-                  <div key={n.id} className="bg-gray-50 p-3 rounded-xl mb-2 border border-gray-100">
+-                    <p className="font-bold text-gray-700 text-xs leading-relaxed mb-3">{n.message}</p>
+-                    <div className="flex gap-2">
+-                      <button onClick={() => { executeSwap(n.id); setShowNotifs(false); }} className="flex-1 bg-green-500 text-white text-xs font-bold rounded-lg py-2 shadow-sm">موافقة</button>
+-                      <button onClick={() => { rejectSwap(n.id); setShowNotifs(false); }} className="flex-1 bg-red-500 text-white text-xs font-bold rounded-lg py-2 shadow-sm">رفض</button>
+-                    </div>
+-                  </div>
+-                ))}
+-              </div>
+-            )}
+-          </div>
+-          <button onClick={onLogout} className="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-red-100 transition-colors"><LogOut size={16} /> خروج</button>
+-        </div>
+-      </header>
+-
+-      <main className="max-w-7xl mx-auto p-8">
+-
+-        <AnimatePresence>
+-          {announcements.filter(a => !hiddenAnnouncements.includes(a.id)).map(ann => (
+-            <motion.div
+-              key={ann.id}
+-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+-              animate={{ opacity: 1, y: 0, scale: 1 }}
+-              exit={{ opacity: 0, scale: 0.95, height: 0, marginBottom: 0 }}
+-              className={`mb-6 p-4 sm:p-5 rounded-[32px] shadow-sm border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all duration-300 ${ann.priority === 'high'
+-                ? 'bg-red-50/90 border-red-200 text-red-900 backdrop-blur-md'
+-                : 'bg-blue-50/90 border-blue-200 text-blue-900 backdrop-blur-md'
+-                }`}
+-            >
+-              <div className="flex items-start sm:items-center gap-4">
+-                <div className={`p-3.5 rounded-2xl shadow-inner shrink-0 ${ann.priority === 'high' ? 'bg-red-100' : 'bg-blue-100'}`}>
+-                  <Megaphone size={26} className={ann.priority === 'high' ? 'text-red-600 animate-pulse' : 'text-blue-600'} />
+-                </div>
+-                <div>
+-                  <p className="font-black text-sm mb-1">{ann.priority === 'high' ? 'تنبيه إداري عاجل:' : 'إعلان مدرسي هام:'}</p>
+-                  <p className="font-bold text-sm leading-relaxed opacity-90">{ann.text}</p>
+-                </div>
+-              </div>
+-              <button
+-                onClick={() => setHiddenAnnouncements([...hiddenAnnouncements, ann.id])}
+-                className={`p-2.5 rounded-xl transition-colors self-end sm:self-auto shrink-0 ${ann.priority === 'high' ? 'bg-red-100/50 hover:bg-red-200 text-red-700' : 'bg-blue-100/50 hover:bg-blue-200 text-blue-700'}`}
+-                title="إخفاء التنبيه"
+-              >
+-                <X size={18} />
+-              </button>
+-            </motion.div>
+-          ))}
+-        </AnimatePresence>
+-
+-        <AnimatePresence mode="wait">
+-          {activeTab === 'schedule' && (
+-            <motion.div key="sc" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-right">
+-              <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 h-fit">
+-                <div className="bg-blue-50 p-4 rounded-2xl mb-6"><h3 className="font-black text-blue-900 flex items-center gap-2 mb-1"><Calendar size={20} /> عرض جدول الفصل</h3></div>
+-                <select value={selectedClassForOverlay} onChange={(e) => setSelectedClassForOverlay(e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 text-sm font-bold mb-4 outline-none cursor-pointer">
+-                  <option value="">-- اختر الفصل --</option>
+-                  {adminClasses.map(cls => <option key={cls} value={cls}>{cls}</option>)}
+-                </select>
+-                <button onClick={() => selectedClassForOverlay && setIsTeacherOverlayOpen(true)} disabled={!selectedClassForOverlay} className={`w-full py-4 rounded-2xl font-black text-lg transition-all ${selectedClassForOverlay ? 'bg-gray-900 text-white shadow-xl hover:-translate-y-1' : 'bg-gray-200 text-gray-400'}`}>فتح الجدول التفاعلي</button>
+-              </div>
+-              <div className="lg:col-span-2 bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
+-                <h3 className="font-black text-gray-800 mb-6 flex items-center gap-2"><Clock size={20} /> الحصص المجدولة ({myLessons.length})</h3>
+-                {myLessons.length === 0 ? <p className="text-gray-400 font-bold text-center py-10 border-2 border-dashed rounded-2xl">لا توجد حصص مسجلة باسمك حالياً.</p> : (
+-                  <div className="space-y-3">
+-                    {myLessons.map(l => (
+-                      <div key={l.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+-                        <div className="flex gap-4 items-center">
+-                          <div className="bg-white px-4 py-2 rounded-xl text-center shadow-sm border border-gray-100"><p className="font-black text-xs text-gray-900">{l.day}</p><p className="text-[10px] text-gray-400 font-mono mt-1">{l.time}</p></div>
+-                          <div>
+-                            <p className="font-black text-gray-800 flex items-center gap-2">
+-                              {l.subject}
+-                              {l.type === 'exam' && <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-md text-[10px] font-bold">اختبار</span>}
+-                            </p>
+-                            <p className="text-xs text-blue-600 font-bold mt-1">{l.stage || l.classCode}</p>
+-                          </div>
+-                        </div>
+-                        <button onClick={() => handleRemoveSlot(l.id)} className="p-3 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors"><Trash2 size={20} /></button>
+-                      </div>
+-                    ))}
+-                  </div>
+-                )}
+-              </div>
+-            </motion.div>
+-          )}
+-
+-          {activeTab === 'tests' && (
+-            <motion.div key="ts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-right">
+-              <div className="mb-8">
+-                <h3 className="text-3xl font-black text-gray-900 flex items-center gap-3"><FileText className="text-blue-600" /> منظومة الاختبارات الذكية</h3>
+-              </div>
+-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+-                <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm">
+-                  <h4 className="font-black text-gray-800 mb-6 flex items-center gap-2"><Edit2 size={20} className="text-blue-500" /> {newTest.id ? 'تعديل الاختبار الحالي' : 'إعداد بيانات الاختبار الجديد'}</h4>
+-
+-                  <div className="space-y-4 mb-8 bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
+-                    <input placeholder="عنوان الاختبار (مثل: اختبار الشهر الأول)" value={newTest.title} onChange={e => setNewTest({ ...newTest, title: e.target.value })} className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:border-blue-500" />
+-
+-                    <select value={newTest.classCode} onChange={e => setNewTest({ ...newTest, classCode: e.target.value })} className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 font-bold text-sm outline-none focus:border-blue-500">
+-                      <option value="">-- اختر الفصل المستهدف --</option>
+-                      {adminClasses.map(c => <option key={c} value={c}>{c}</option>)}
+-                    </select>
+-
+-                    <div className="flex gap-2 bg-white p-2 rounded-2xl border border-gray-200">
+-                      <button onClick={() => setExamTimingMode('schedule')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all ${examMode === 'schedule' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>ضمن الجدول الدراسي</button>
+-                      <button onClick={() => setExamTimingMode('evening')} className={`flex-1 py-3 rounded-xl font-bold text-xs transition-all ${examMode === 'evening' ? 'bg-indigo-600 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}>اختبار حر / مسائي</button>
+-                    </div>
+-
+-                    {examMode === 'schedule' ? (
+-                      <div className="bg-white p-5 rounded-2xl border border-blue-100 shadow-inner">
+-                        <p className="text-xs text-gray-500 font-bold mb-3">سيتم ربط الاختبار بوقت حصة فعلية في الجدول، وتأخذ نفس مدتها.</p>
+-                        <button onClick={() => { if (!newTest.classCode) return showToast('اختر الفصل أولاً'); setIsExamScheduleOpen(true); }} className="w-full bg-blue-50 text-blue-600 border border-blue-200 py-3 rounded-xl font-black flex justify-center gap-2 hover:bg-blue-100 transition-colors">
+-                          <Calendar size={18} /> {newTest.time ? `تم التحديد: يوم ${newTest.day} الساعة ${newTest.time}` : 'افتح الجدول لتحديد الحصة'}
+-                        </button>
+-                        <div className="mt-3 flex gap-2">
+-                          <select value={newTest.type} onChange={e => setNewTest({ ...newTest, type: e.target.value })} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-xs outline-none">
+-                            <option value="online">إلكتروني (عبر المنصة)</option>
+-                            <option value="paper">ورقي (في الفصل)</option>
+-                          </select>
+-                        </div>
+-                      </div>
+-                    ) : (
+-                      <div className="bg-white p-5 rounded-2xl border border-indigo-100 shadow-inner grid grid-cols-2 gap-3">
+-                        <div className="col-span-2">
+-                          <p className="text-xs text-indigo-500 font-bold mb-3">يُعقد هذا الاختبار (أونلاين) خارج أوقات الحصص الرسمية.</p>
+-                        </div>
+-                        <div>
+-                          <label className="text-[10px] font-bold text-gray-400 block mb-1">تاريخ الاختبار</label>
+-                          <input type="date" value={newTest.date} onChange={e => setNewTest({ ...newTest, date: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-xs outline-none" />
+-                        </div>
+-                        <div>
+-                          <label className="text-[10px] font-bold text-gray-400 block mb-1">وقت البدء</label>
+-                          <input type="time" value={newTest.time} onChange={e => setNewTest({ ...newTest, time: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-xs outline-none" />
+-                        </div>
+-                        <div className="col-span-2">
+-                          <label className="text-[10px] font-bold text-gray-400 block mb-1">المدة (بالدقائق)</label>
+-                          <input type="number" placeholder="مثال: 120" value={newTest.duration} onChange={e => setNewTest({ ...newTest, duration: e.target.value })} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 font-bold text-xs outline-none" />
+-                        </div>
+-                      </div>
+-                    )}
+-                  </div>
+-
+-                  <div className="border-t border-gray-100 pt-6">
+-                    <div className="flex justify-between items-center mb-4">
+-                      <h5 className="font-black text-gray-700 text-sm">أسئلة الاختبار ({questions.length})</h5>
+-                      <button onClick={() => setShowBank(!showBank)} className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold text-blue-600 shadow-sm flex items-center gap-1 hover:bg-blue-50"><Search size={14} /> بنك الأسئلة</button>
+-                    </div>
+-                    {showBank && (
+-                      <div className="bg-gray-100 p-4 rounded-2xl mb-4 max-h-60 overflow-auto border border-gray-200">
+-                        {questionBank.length === 0 ? <p className="text-xs text-gray-400">البنك فارغ.</p> : questionBank.map((qb, i) => (
+-                          <div key={i} className="bg-white p-3 rounded-xl mb-2 flex justify-between items-center shadow-sm">
+-                            <p className="text-sm font-bold truncate max-w-[200px]">{qb.text}</p>
+-                            <button onClick={() => addFromBank(qb)} className="text-blue-600 bg-blue-50 px-3 py-1 rounded-lg text-xs font-bold">+ إضافة</button>
+-                          </div>
+-                        ))}
+-                      </div>
+-                    )}
+-                    <div className="bg-gray-50 p-5 rounded-3xl border border-gray-200 mb-6 shadow-inner">
+-                      <input placeholder="نص السؤال..." value={currentQ.text} onChange={e => setCurrentQ({ ...currentQ, text: e.target.value })} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 font-bold text-sm mb-4 outline-none focus:border-blue-500" />
+-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+-                        {[1, 2, 3, 4].map(num => (
+-                          <div key={num} className={`flex items-center bg-white border rounded-xl px-3 py-2 ${currentQ.correctOpt === String(num) ? 'border-green-500 ring-1 ring-green-200' : 'border-gray-200'}`}>
+-                            <input type="radio" name="correct" value={String(num)} checked={currentQ.correctOpt === String(num)} onChange={e => setCurrentQ({ ...currentQ, correctOpt: e.target.value })} className="ml-2 w-4 h-4" />
+-                            <input placeholder={`الخيار ${num}`} value={currentQ[`opt${num}`]} onChange={e => setCurrentQ({ ...currentQ, [`opt${num}`]: e.target.value })} className="w-full text-xs font-bold outline-none bg-transparent" />
+-                          </div>
+-                        ))}
+-                      </div>
+-                      <button onClick={handleSaveQuestion} className={`w-full font-bold py-3 rounded-xl text-sm ${currentQ.id ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-gray-900 hover:bg-gray-800 text-white'}`}>{currentQ.id ? 'حفظ التعديل' : '+ إضافة السؤال'}</button>
+-                    </div>
+-                    {questions.length > 0 && (
+-                      <div className="space-y-2 mb-6 max-h-48 overflow-auto pr-2">
+-                        {questions.map((q, idx) => (
+-                          <div key={q.id} className="bg-white p-3 rounded-xl border border-gray-100 flex justify-between items-center shadow-sm">
+-                            <div className="flex items-center gap-2"><span className="bg-blue-100 text-blue-700 w-6 h-6 flex items-center justify-center rounded-full text-xs font-black">{idx + 1}</span><p className="font-bold text-sm text-gray-800 truncate max-w-[150px]">{q.text}</p></div>
+-                            <div className="flex gap-2">
+-                              <button onClick={() => handleEditQuestion(q)} className="text-orange-500 bg-orange-50 p-1.5 rounded-lg"><Edit2 size={14} /></button>
+-                              <button onClick={() => handleDeleteQuestion(q.id)} className="text-red-500 bg-red-50 p-1.5 rounded-lg"><Trash2 size={14} /></button>
+-                            </div>
+-                          </div>
+-                        ))}
+-                      </div>
+-                    )}
+-                    <button onClick={handleSaveTest} className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg"><Save size={20} /> {newTest.id ? 'تحديث بيانات الاختبار' : 'حفظ واعتماد الاختبار'}</button>
+-                  </div>
+-                </div>
+-
+-                <div className="bg-gray-50 rounded-[32px] p-8 border border-gray-200">
+-                  <h4 className="font-black text-gray-800 mb-6 flex items-center gap-2"><CheckCircle2 size={20} className="text-green-500" /> الاختبارات المُصدرة</h4>
+-                  {myTests.length === 0 ? (
+-                    <div className="py-16 text-center border-2 border-dashed border-gray-200 rounded-2xl">
+-                      <FileText size={32} className="text-gray-300 mx-auto mb-3" />
+-                      <p className="text-gray-400 font-bold">لا توجد اختبارات مُنشأة بعد</p>
+-                    </div>
+-                  ) : myTests.map(t => (
+-                    <div key={t.id} className="bg-white p-5 border border-gray-100 rounded-2xl flex justify-between items-center shadow-sm mb-4">
+-                      <div>
+-                        <p className="font-black text-lg text-gray-900">{t.title}</p>
+-                        <p className="text-[11px] font-bold text-gray-500 mt-1">الفصل: {t.classCode} | المدة: {t.duration} د</p>
+-                        <div className="flex gap-2 mt-2">
+-                          <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-md">{t.date ? t.date : `يوم ${t.day}`} - {t.time}</span>
+-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${t.type !== 'paper' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+-                            {t.type !== 'paper' ? 'إلكتروني' : 'ورقي'}
+-                          </span>
+-                        </div>
+-                      </div>
+-                      <div className="flex flex-col gap-2">
+-                        <button onClick={() => handleEditTest(t)} className="bg-orange-50 text-orange-600 px-4 py-2 rounded-xl text-xs font-black"><Edit2 size={12} /> تعديل</button>
+-                        <button onClick={() => handleDeleteTest(t.id)} className="bg-red-50 text-red-500 px-4 py-2 rounded-xl text-xs font-black"><Trash2 size={12} /> حذف</button>
+-                      </div>
+-                    </div>
+-                  ))}
+-                </div>
+-              </div>
+-            </motion.div>
+-          )}
+-
+-          {activeTab === 'attendance' && (
+-            <motion.div key="at" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-[40px] p-10 border border-gray-100 shadow-sm text-right">
+-              <div className="mb-10"><h3 className="text-3xl font-black text-gray-900 flex items-center gap-3 mb-2"><Users className="text-green-600" /> سجل الحضور التفاعلي</h3></div>
+-
+-              {/* حصص المعلم اليوم */}
+-              {(() => {
+-                const currentDay = getCurrentDayNameArabic();
+-                const todayLessons = myLessons.filter(l => l.day === currentDay);
+-                const attendanceHistory = JSON.parse(localStorage.getItem('moo_attendance') || '{}');
+-                const nowTime = new Date();
+-
+-                if (todayLessons.length === 0) {
+-                  return (
+-                    <div className="mb-10 bg-gray-50 border border-gray-200 rounded-[32px] p-10 text-center">
+-                      <Calendar size={48} className="text-gray-300 mx-auto mb-4" />
+-                      <p className="text-gray-500 font-black text-xl">ليس لديك حصص مجدولة لهذا اليوم ({currentDay}).</p>
+-                      <p className="text-gray-400 font-bold text-sm mt-2">نظام التحضير يعمل بناءً على الجدول الفعلي فقط لضمان دقة البيانات.</p>
+-                    </div>
+-                  );
+-                }
+-
+-                return (
+-                  <div className="mb-10 bg-gray-50 p-8 rounded-[32px] border border-gray-100">
+-                    <h4 className="text-sm font-black text-gray-500 mb-6 flex items-center gap-2">
+-                      <Calendar size={18} /> حصصك المجدولة لليوم ({currentDay}):
+-                    </h4>
+-                    <div className="flex flex-wrap gap-4">
+-                      {todayLessons.map((lesson, idx) => {
+-                        const classCode = lesson.classCode || lesson.stage;
+-                        if (!classCode) return null; // Avoid empty classes
+-                        const isTaken = !!attendanceHistory[`${classCode}_${attendanceDate}`];
+-                        const lessonTime = parseTime(lesson.time);
+-                        const hasStarted = lessonTime ? nowTime >= lessonTime : true;
+-
+-                        let cardClass = "";
+-                        let onClickHandler = null;
+-
+-                        if (isTaken) {
+-                           cardClass = "bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100";
+-                           onClickHandler = () => {
+-                             setConfirmModalData({
+-                               title: 'تعديل السجل',
+-                               message: `تم أخذ الغياب لـ ${classCode} اليوم، هل تريد عرض وتعديل السجل؟`,
+-                               onConfirm: () => {
+-                                 setAttendanceClass(classCode);
+-                                 setConfirmModalData(null);
+-                               }
+-                             });
+-                           };
+-                        } else if (hasStarted) {
+-                           cardClass = "bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100 shadow-[0_4px_15px_rgba(245,158,11,0.1)]";
+-                           onClickHandler = () => setAttendanceClass(classCode);
+-                        } else {
+-                           cardClass = "bg-gray-100 border-gray-200 text-gray-400 opacity-60 cursor-not-allowed grayscale";
+-                           onClickHandler = () => showToast(`لم يحن وقت الحصة بعد! (تبدأ ${lesson.time})`);
+-                        }
+-
+-                        return (
+-                          <button key={idx} onClick={onClickHandler} className={`border-2 px-6 py-5 rounded-2xl text-sm font-black transition-all flex flex-col gap-2 items-start w-52 text-right ${cardClass}`}>
+-                            <span className="text-xl">{classCode}</span>
+-                            <div className="flex items-center gap-2 text-xs opacity-80 mt-1">
+-                              <Clock size={12} />
+-                              {lesson.time}
+-                            </div>
+-                            <div className="text-[11px] mt-2 font-bold bg-white/50 px-2 py-1 rounded w-full text-center">
+-                              {isTaken ? '✅ تم التحضير' : hasStarted ? '⏳ بانتظار الغياب' : (
+-                                <div className="flex items-center gap-1 justify-center text-gray-500">
+-                                  <Lock size={10} />
+-                                  <LiveCountdown targetTime={lessonTime} />
+-                                </div>
+                               )}
+                             </div>
+                           </button>
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+We did our best to apply changes despite some inaccuracies. Double check if the edit applied is what you intended.

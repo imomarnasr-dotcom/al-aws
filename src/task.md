@@ -1,0 +1,12 @@
+- [x] Create ConfirmManager.jsx and mooConfirm utility
+- [x] Inject ConfirmManager into App.jsx
+- [x] Update CafeteriaAdminDashboard.jsx tabs and UI
+  - [x] Split orders into 'الطلبات الحية' and 'الطلبات المسلمة'
+  - [x] Add 'End Shift' button
+- [x] Implement Order Flow functions
+  - [x] handleReadyOrder (pending -> ready)
+  - [x] handleDeliverOrder (ready -> completed)
+  - [x] handleRefundOrder (completed -> cancelled, with confirm)
+  - [x] handleEndShift (apply logic & penalty)
+- [x] Verify functionality
+- [ ] Create walkthrough.md
