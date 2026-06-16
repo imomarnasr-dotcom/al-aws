@@ -39,7 +39,9 @@ const DashboardView = ({ studentData, searchQuery, onNavigateToSchedule }) => {
     try { 
       const t1 = JSON.parse(localStorage.getItem('moo_tests') || '[]');
       const t2 = JSON.parse(localStorage.getItem('exams') || '[]');
-      return [...t1, ...t2];
+      const merged = [...t1, ...t2];
+      const unique = Array.from(new Map(merged.map(e => [e.id, e])).values());
+      return unique;
     } catch { return []; }
   });
   const getAcademicLessons = () => {
@@ -53,7 +55,9 @@ const DashboardView = ({ studentData, searchQuery, onNavigateToSchedule }) => {
       try { 
         const t1 = JSON.parse(localStorage.getItem('moo_tests') || '[]');
         const t2 = JSON.parse(localStorage.getItem('exams') || '[]');
-        setGlobalExams([...t1, ...t2]);
+        const merged = [...t1, ...t2];
+        const unique = Array.from(new Map(merged.map(e => [e.id, e])).values());
+        setGlobalExams(unique);
       } catch { }
       setAcademicLessons(getAcademicLessons());
     };
@@ -364,7 +368,8 @@ const DashboardView = ({ studentData, searchQuery, onNavigateToSchedule }) => {
       const realGrades = JSON.parse(localStorage.getItem('moo_grades') || '{}');
       const t1 = JSON.parse(localStorage.getItem('moo_tests') || '[]');
       const t2 = JSON.parse(localStorage.getItem('exams') || '[]');
-      const onlineExams = [...t1, ...t2];
+      const merged = [...t1, ...t2];
+      const onlineExams = Array.from(new Map(merged.map(e => [e.id, e])).values());
 
       const liveSubjects = [];
       Object.entries(realGrades).forEach(([key, gradesMap]) => {

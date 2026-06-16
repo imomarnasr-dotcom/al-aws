@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['pwa-192x192.svg', 'pwa-512x512.svg', 'logo.jpg'],
+      includeAssets: ['pwa-192x192.png', 'pwa-512x512.png', 'app_icon.png', 'logo.jpg'],
       manifest: {
         name: 'منصة مدارس الأوس',
         short_name: 'الأوس',
@@ -21,8 +21,14 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'app_icon.png',
-            sizes: '192x192 512x512',
+            src: '/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/pwa-512x512.png',
+            sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
           }

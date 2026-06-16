@@ -28,7 +28,8 @@ const GradesView = ({ studentData, searchQuery = '' }) => {
         setRealGrades(JSON.parse(localStorage.getItem('moo_grades') || '{}')); 
         const t1 = JSON.parse(localStorage.getItem('moo_tests') || '[]');
         const t2 = JSON.parse(localStorage.getItem('exams') || '[]');
-        setOnlineExams([...t1, ...t2]);
+        const merged = [...t1, ...t2];
+        setOnlineExams(Array.from(new Map(merged.map(e => [e.id, e])).values()));
       } catch { }
     };
     window.addEventListener('moo-sync', refresh);

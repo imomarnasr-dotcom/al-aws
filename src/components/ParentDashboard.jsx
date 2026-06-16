@@ -125,11 +125,11 @@ const ParentDashboard = ({ studentData, onLogout }) => {
     });
 
     /* 3b. Grades from online exams */
-    const allExams = [
-      ...JSON.parse(localStorage.getItem('moo_tests') || '[]'),
-      ...JSON.parse(localStorage.getItem('exams')     || '[]'),
-    ];
-    allExams.forEach(exam => {
+    const t1 = JSON.parse(localStorage.getItem('moo_tests') || '[]');
+    const t2 = JSON.parse(localStorage.getItem('exams') || '[]');
+    const merged = [...t1, ...t2];
+    const uniqueExams = Array.from(new Map(merged.map(e => [e.id, e])).values());
+    uniqueExams.forEach(exam => {
       const ec = exam.classCode || exam.stage || exam.class || '';
       if (ec !== sClass) return;
       const report = exam.reports?.find(r => r.studentId === sid && r.status === 'submitted');
