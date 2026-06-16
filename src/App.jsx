@@ -32,7 +32,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 // 🪄 استدعاء ملفات التصميم والخلفية
 import './styles/makeover.css';
-import ParticlesBackground from './components/ParticlesBackground';
+import ParticlesBackground from './components/particlesbackground';
 
 export const STORE_ITEMS = [
   // ألقاب VIP (Titles)
