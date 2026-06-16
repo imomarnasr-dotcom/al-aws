@@ -41,14 +41,14 @@ const getManualDailyRecords = () => {
  * @param {string} studentId
  * @returns {{percentage, total, present, absent, truancy, isExempted, morningStatus}}
  */
-export const calculateStudentAttendance = (studentId) => {
+export const calculateStudentAttendance = (studentId, parsedData = null) => {
   const emptyGreen = {
     percentage: 100, total: 0, present: 0, absent: 0, truancy: 0,
     isExempted: false, morningStatus: 'pending',
   };
   if (!studentId) return emptyGreen;
 
-  const whitelist = getWhitelist();
+  const whitelist = parsedData?.whitelist || getWhitelist();
   const student = whitelist.find(s => s.id === studentId);
   if (!student) return emptyGreen;
 
@@ -59,9 +59,9 @@ export const calculateStudentAttendance = (studentId) => {
   const _d = new Date();
   const today = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`;
   const isTodayHoliday = !isWorkingDay(today);
-  const allManualRecords = getManualDailyRecords();
+  const allManualRecords = parsedData?.allManualRecords || getManualDailyRecords();
   const manualToday = allManualRecords[today] || {};
-  const autoMode = (() => {
+  const autoMode = parsedData?.autoMode !== undefined ? parsedData.autoMode : (() => {
     try { return JSON.parse(localStorage.getItem('moo_auto_attendance_enabled') || 'false'); } catch { return false; }
   })();
 
@@ -78,7 +78,7 @@ export const calculateStudentAttendance = (studentId) => {
   // فصول الطلاب الصغار
   let isYoungExempted = false;
   try {
-    const youngClasses = JSON.parse(localStorage.getItem('moo_young_classes') || '[]');
+    const youngClasses = parsedData?.youngClasses || JSON.parse(localStorage.getItem('moo_young_classes') || '[]');
     const normalizeStr = (str) => str ? str.trim().replace(/ي/g, 'ى').replace(/[أإآ]/g, 'ا') : '';
     const classCodeNorm = normalizeStr(classCode);
     
@@ -88,9 +88,11 @@ export const calculateStudentAttendance = (studentId) => {
     }
   } catch (e) {}
 
-  const dailyRecords = getClassAttendanceRecords();
-  let periodRecords = {};
-  try { Object.assign(periodRecords, JSON.parse(localStorage.getItem('moo_attendance_periods') || '{}')); } catch {}
+  const dailyRecords = parsedData?.dailyRecords || getClassAttendanceRecords();
+  let periodRecords = parsedData?.periodRecords || {};
+  if (!parsedData?.periodRecords) {
+    try { Object.assign(periodRecords, JSON.parse(localStorage.getItem('moo_attendance_periods') || '{}')); } catch {}
+  }
 
   let total = 0, present = 0, absent = 0, truancy = 0;
 
@@ -103,17 +105,23 @@ export const calculateStudentAttendance = (studentId) => {
       }
     });
 
-    // 1. Process daily records ONLY for dates that do NOT have period records
-    Object.keys(dailyRecords).forEach(key => {
-      if (!key.startsWith(`${classCode}_`)) return;
-      const dateStr = key.slice(classCode.length + 1);
-      if (datesWithPeriods.has(dateStr)) return; // Skip if period records exist for this day
+    const processMapRecord = (map, dateStr) => {
+      let wasEnrolled = false;
+      let status = undefined;
 
-      if (dateStr && !isWorkingDay(dateStr)) return;
-      const map = dailyRecords[key] || {};
-      if (map[studentId] === undefined) return;
-      
-      const status = normalizeAttendanceValue(map[studentId]);
+      if (map.__enrolled) {
+        wasEnrolled = map.__enrolled.includes(studentId);
+        if (wasEnrolled) {
+           status = map[studentId] !== undefined ? normalizeAttendanceValue(map[studentId]) : ATTENDANCE_STATUS.PRESENT;
+        }
+      } else {
+        wasEnrolled = map[studentId] !== undefined;
+        if (wasEnrolled) {
+           status = normalizeAttendanceValue(map[studentId]);
+        }
+      }
+
+      if (!wasEnrolled) return;
       if (status === ATTENDANCE_STATUS.EXEMPTED) return;
 
       total++;
@@ -123,6 +131,17 @@ export const calculateStudentAttendance = (studentId) => {
         const gate = allManualRecords[dateStr]?.[studentId];
         if (gate && ['حاضر', 'متأخر', 'انصراف'].includes(gate.status)) truancy++;
       }
+    };
+
+    // 1. Process daily records ONLY for dates that do NOT have period records
+    Object.keys(dailyRecords).forEach(key => {
+      if (!key.startsWith(`${classCode}_`)) return;
+      const dateStr = key.slice(classCode.length + 1);
+      if (datesWithPeriods.has(dateStr)) return; // Skip if period records exist for this day
+
+      if (dateStr && !isWorkingDay(dateStr)) return;
+      const map = dailyRecords[key] || {};
+      processMapRecord(map, dateStr);
     });
 
     // 2. Process period records
@@ -135,18 +154,7 @@ export const calculateStudentAttendance = (studentId) => {
       if (dateStr && !isWorkingDay(dateStr)) return;
 
       const map = periodRecords[key] || {};
-      if (map[studentId] === undefined) return;
-
-      const status = normalizeAttendanceValue(map[studentId]);
-      if (status === ATTENDANCE_STATUS.EXEMPTED) return;
-
-      total++;
-      if (status === ATTENDANCE_STATUS.PRESENT) { present++; } 
-      else {
-        absent++;
-        const gate = allManualRecords[dateStr]?.[studentId];
-        if (gate && ['حاضر', 'متأخر', 'انصراف'].includes(gate.status)) truancy++;
-      }
+      processMapRecord(map, dateStr);
     });
   }
 

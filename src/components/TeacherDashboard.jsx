@@ -1136,13 +1136,15 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     const recordKey = `${attendanceClass}_${attendanceDate}`;
     const classStudents = students.filter(s => s.className?.trim() === attendanceClass?.trim());
 
-    const todayRecord = {};
+    const todayRecord = { __enrolled: classStudents.map(s => s.id) };
     classStudents.forEach(s => {
       if (s.isExempted) {
         todayRecord[s.id] = ATTENDANCE_STATUS.EXEMPTED;
       } else {
         const isPres = attendanceMap[s.id] !== false && attendanceMap[s.id] !== 'ABSENT';
-        todayRecord[s.id] = isPres ? ATTENDANCE_STATUS.PRESENT : ATTENDANCE_STATUS.ABSENT;
+        if (!isPres) {
+          todayRecord[s.id] = ATTENDANCE_STATUS.ABSENT;
+        }
       }
     });
 
@@ -1157,9 +1159,18 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     });
     localStorage.setItem('moo_attendance_periods', JSON.stringify(attendancePeriods));
 
+    const parsedData = {
+      whitelist: students,
+      dailyRecords: attendanceHistory,
+      periodRecords: attendancePeriods,
+      allManualRecords: JSON.parse(localStorage.getItem('moo_daily_attendance_manual') || '{}'),
+      youngClasses: JSON.parse(localStorage.getItem('moo_young_classes') || '[]'),
+      autoMode: (() => { try { return JSON.parse(localStorage.getItem('moo_auto_attendance_enabled') || 'false'); } catch { return false; } })()
+    };
+
     const refreshedStudents = students.map(s => {
       if (s.className !== attendanceClass) return s;
-      const stat = calculateStudentAttendance(s.id);
+      const stat = calculateStudentAttendance(s.id, parsedData);
       return { ...s, totalClasses: stat.total, attendedClasses: stat.present, attendancePercentage: stat.percentage };
     });
     localStorage.setItem('moo_whitelist', JSON.stringify(refreshedStudents));

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
@@ -29,8 +29,13 @@ const AdminTruancyRadar = () => {
         Object.entries(attendanceHistory).forEach(([key, record]) => {
           if (key.endsWith('_' + today)) {
             const className = key.split('_')[0];
-            const status = record[student.id];
-            if (status === 'حاضر' || status === 'حضور' || status === '') {
+            let isPresent = false;
+            if (record.__enrolled) {
+              isPresent = record.__enrolled.includes(student.id) && record[student.id] !== 'غائب' && record[student.id] !== 'معفي';
+            } else {
+              isPresent = record[student.id] === 'حاضر' || record[student.id] === true || record[student.id] === 'ح';
+            }
+            if (isPresent) {
               attendedClasses.push(className);
             }
           }

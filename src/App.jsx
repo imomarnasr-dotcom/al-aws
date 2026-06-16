@@ -24,7 +24,7 @@ import SuccessModal from './components/SuccessModal';
 import AcademicStore from './components/AcademicStore';
 import ToastManager from './components/ToastManager';
 import ConfirmManager from './components/ConfirmManager';
-import CloudSyncDaemon from './services/CloudSyncDaemon';
+import CloudSyncV3 from './services/CloudSyncV3';
 import { studentData } from './data/studentData';
 import { getStudentDynamicPoints } from './utils/dataManager';
 import { Palette, X, Settings2, ShoppingCart, Trash2, CreditCard, Award, Star, BookOpen, Crown, Zap, Calendar, Bell } from 'lucide-react';
@@ -784,6 +784,7 @@ const ExamResultNotification = ({ student }) => {
 };
 
 const App = () => {
+  const [isDataReady, setIsDataReady] = useState(false);
   const [currentPage, setCurrentPage] = useState(() => localStorage.getItem('moo_currentPage') || 'landing');
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('moo_currentUser') || 'null'));
 
@@ -1238,7 +1239,19 @@ const App = () => {
 
   return (
     <>
-      <CloudSyncDaemon />
+      <CloudSyncV3 onReady={() => setIsDataReady(true)} />
+      
+      {!isDataReady ? (
+        <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-900 text-white font-main selection:bg-primary/20" dir="rtl">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
+            <div className="animate-spin relative rounded-full h-20 w-20 border-t-4 border-b-4 border-primary"></div>
+          </div>
+          <h2 className="text-2xl font-bold mb-2">جاري تجهيز بيئة الأبطال...</h2>
+          <p className="text-gray-400 text-sm animate-pulse">تهيئة محرك الذاكرة الحي وقواعد البيانات الموزعة 🚀</p>
+        </div>
+      ) : (
+      <>
       <ToastManager />
       <ConfirmManager />
       <ErrorBoundary>
@@ -1468,7 +1481,6 @@ const App = () => {
             </>
           )}
 
-          
         </div>
       </ErrorBoundary>
 
@@ -1485,6 +1497,8 @@ const App = () => {
         type={successModal.type}
         onClose={() => setSuccessModal({ ...successModal, isVisible: false })}
       />
+      </>
+      )}
     </>
   );
 };
