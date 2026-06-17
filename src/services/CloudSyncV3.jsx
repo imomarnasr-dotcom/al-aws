@@ -200,7 +200,8 @@ export default function CloudSyncV3({ onReady }) {
           if (!docId) return;
           const oldItem = oldParsed ? oldParsed[docId] : null;
           if (JSON.stringify(oldItem) !== JSON.stringify(item)) {
-            operations.push({ ref: doc(db, `system_v3_${collName}`, String(docId)), data: item });
+            const dataToSave = (typeof item === 'object' && item !== null) ? item : { value: item };
+            operations.push({ ref: doc(db, `system_v3_${collName}`, String(docId)), data: dataToSave });
           }
         });
       }
