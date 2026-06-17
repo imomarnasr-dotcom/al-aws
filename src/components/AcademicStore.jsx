@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingCart, Award, Sparkles, Star } from 'lucide-react';
 import { getStudentDynamicPoints } from '../utils/dataManager';
@@ -6,6 +6,12 @@ import { STORE_ITEMS } from '../App';
 
 const AcademicStore = ({ student, onClose }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const [activeItems, setActiveItems] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('moo_active_store_items') || '{}')[student?.personal?.id] || {};
+    } catch { return {}; }
+  });
 
   const studentId = student?.personal?.id;
   const studentClass = student?.personal?.class;
@@ -16,15 +22,36 @@ const AcademicStore = ({ student, onClose }) => {
   
   const purchased = JSON.parse(localStorage.getItem('moo_store_purchases') || '{}')[studentId] || [];
 
+  const handleEquip = (item) => {
+    const allActive = JSON.parse(localStorage.getItem('moo_active_store_items') || '{}');
+    if (!allActive[studentId]) allActive[studentId] = {};
+    
+    // Toggle
+    if (allActive[studentId][item.category] === item.id) {
+       if (item.category === 'theme') {
+          document.documentElement.style.setProperty('--primary-color', '#7C3AED');
+          document.documentElement.style.setProperty('--primary-rgb', '124, 58, 237');
+          localStorage.removeItem('moo_theme_color');
+       }
+       delete allActive[studentId][item.category];
+    } else {
+       allActive[studentId][item.category] = item.id;
+       if (item.category === 'theme') {
+          document.documentElement.style.setProperty('--primary-color', item.hex);
+          document.documentElement.style.setProperty('--primary-rgb', item.rgb);
+          localStorage.setItem('moo_theme_color', JSON.stringify({ hex: item.hex, rgb: item.rgb }));
+       }
+    }
+    
+    localStorage.setItem('moo_active_store_items', JSON.stringify(allActive));
+    setActiveItems(allActive[studentId]);
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('moo-sync', { detail: { action: 'equip' } }));
+  };
+
   const handlePurchase = (item) => {
     if (availablePoints < item.cost) return;
     if (purchased.includes(item.id)) return;
-
-    if (item.category === 'theme') {
-      document.documentElement.style.setProperty('--primary-color', item.hex);
-      document.documentElement.style.setProperty('--primary-rgb', item.rgb);
-      localStorage.setItem('moo_theme_color', JSON.stringify({ hex: item.hex, rgb: item.rgb }));
-    }
 
     // خصم النقاط
     const allSpent = JSON.parse(localStorage.getItem('moo_spent_points') || '{}');
@@ -36,6 +63,9 @@ const AcademicStore = ({ student, onClose }) => {
     if (!purchases[studentId]) purchases[studentId] = [];
     purchases[studentId].push(item.id);
     localStorage.setItem('moo_store_purchases', JSON.stringify(purchases));
+
+    // Auto-equip the newly purchased item
+    handleEquip(item);
 
     // تحديث الأوسمة المثبتة إذا لم يكن ثيم أو إطار
     try {
@@ -54,7 +84,7 @@ const AcademicStore = ({ student, onClose }) => {
     } catch (e) {}
 
     // Trigger storage event to update App.jsx
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    window.dispatchEvent(new Event('storage')); 
     window.dispatchEvent(new CustomEvent('moo-sync', { detail: { action: 'purchase' } }));
   };
 
@@ -131,6 +161,7 @@ const AcademicStore = ({ student, onClose }) => {
               {filteredItems.map(item => {
                 const isPurchased = purchased.includes(item.id);
                 const canAfford = availablePoints >= item.cost;
+                const isEquipped = activeItems[item.category] === item.id;
 
                 return (
                   <motion.div
@@ -140,14 +171,21 @@ const AcademicStore = ({ student, onClose }) => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     className={`relative p-5 rounded-2xl border-2 transition-all duration-300 ${
-                      isPurchased 
-                        ? 'bg-green-50 border-green-200' 
-                        : canAfford
-                          ? 'bg-white border-gray-100 hover:border-primary hover:shadow-xl'
-                          : 'bg-gray-50 border-gray-100 opacity-75'
+                      isEquipped 
+                        ? 'bg-green-50 border-green-500 shadow-lg shadow-green-100'
+                        : isPurchased 
+                          ? 'bg-white border-gray-200 hover:border-gray-300' 
+                          : canAfford
+                            ? 'bg-white border-gray-100 hover:border-primary hover:shadow-xl'
+                            : 'bg-gray-50 border-gray-100 opacity-75'
                     }`}
                   >
-                    <div className="flex justify-between items-start mb-4">
+                    {isEquipped && (
+                      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded-md font-bold shadow-sm">
+                        مُفعل حالياً
+                      </div>
+                    )}
+                    <div className="flex justify-between items-start mb-4 mt-2">
                       <div className="text-4xl bg-gray-50 w-16 h-16 flex items-center justify-center rounded-2xl shadow-sm">
                         {item.icon}
                       </div>
@@ -162,18 +200,22 @@ const AcademicStore = ({ student, onClose }) => {
                     <p className="text-sm text-gray-500 mb-6 line-clamp-2">{item.desc}</p>
 
                     <button
-                      onClick={() => handlePurchase(item)}
-                      disabled={isPurchased || !canAfford}
+                      onClick={() => isPurchased ? handleEquip(item) : handlePurchase(item)}
+                      disabled={!isPurchased && !canAfford}
                       className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-                        isPurchased
-                          ? 'bg-green-500 text-white cursor-default'
-                          : canAfford
-                            ? 'bg-primary text-white hover:bg-primary-dark active:scale-95 shadow-md hover:shadow-lg'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        isEquipped
+                          ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
+                          : isPurchased
+                            ? 'bg-green-500 text-white hover:bg-green-600 shadow-md'
+                            : canAfford
+                              ? 'bg-primary text-white hover:bg-primary-dark active:scale-95 shadow-md hover:shadow-lg'
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
                     >
-                      {isPurchased ? (
-                        <>تم الشراء ✓</>
+                      {isEquipped ? (
+                        <>إلغاء التفعيل ✕</>
+                      ) : isPurchased ? (
+                        <>تفعيل ✓</>
                       ) : canAfford ? (
                         <>شراء الآن</>
                       ) : (

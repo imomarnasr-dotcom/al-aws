@@ -229,7 +229,6 @@ const StudentProfile = ({ student, lastExamScore, onClose, onLogout, syncTrigger
   const allAchievements = JSON.parse(localStorage.getItem('moo_achievements')) || {};
   const myBadges = allAchievements[student?.personal?.id] || [];
 
-  // 🔥 إضافة: قراءة مشتريات المتجر وتطبيق أثرها الحقيقي في الـ UI
   const myPurchases = useMemo(() => {
     try {
       const purchases = JSON.parse(localStorage.getItem('moo_store_purchases') || '{}');
@@ -238,23 +237,33 @@ const StudentProfile = ({ student, lastExamScore, onClose, onLogout, syncTrigger
     } catch { return []; }
   }, [student?.personal?.id, syncTrigger]);
 
-  const hasGoldenFrame = myPurchases.includes('frame_gold') || myPurchases.includes('frame_diamond') || myPurchases.includes('frame_fire') || myPurchases.includes('frame_neon') || myPurchases.includes('frame_silver') || myPurchases.includes('frame_bronze') || myPurchases.includes('golden_frame'); // fallback
-  const purchasedFrameItem = STORE_ITEMS.find(item => item.category === 'frame' && myPurchases.includes(item.id)) || (myPurchases.includes('golden_frame') ? { id: 'golden_frame', name: 'إطار الذهب الخالص', icon: '🥇' } : null);
+  const activeStoreItems = useMemo(() => {
+    try {
+      const active = JSON.parse(localStorage.getItem('moo_active_store_items') || '{}');
+      return active[student?.personal?.id] || {};
+    } catch { return {}; }
+  }, [student?.personal?.id, syncTrigger]);
+
+  const activeFrameId = activeStoreItems.frame || STORE_ITEMS.find(i => i.category === 'frame' && myPurchases.includes(i.id))?.id;
+  const hasGoldenFrame = activeFrameId || myPurchases.includes('golden_frame');
+  const purchasedFrameItem = STORE_ITEMS.find(item => item.id === activeFrameId) || (myPurchases.includes('golden_frame') ? { id: 'golden_frame', name: 'إطار ذهبي', icon: '👑' } : null);
 
   const hasVipBadge = myPurchases.includes('vip_badge');
-  const purchasedTitleItem = STORE_ITEMS.find(item => item.category === 'title' && myPurchases.includes(item.id));
+  const activeTitleId = activeStoreItems.title || STORE_ITEMS.find(i => i.category === 'title' && myPurchases.includes(i.id))?.id;
+  const purchasedTitleItem = STORE_ITEMS.find(item => item.id === activeTitleId);
   const activeTitle = purchasedTitleItem ? purchasedTitleItem.name : null;
 
-  const hasCustomEmoji = STORE_ITEMS.some(item => item.category === 'emoji' && myPurchases.includes(item.id)) || myPurchases.includes('custom_emoji');
+  const activeEmojiId = activeStoreItems.emoji || STORE_ITEMS.find(i => i.category === 'emoji' && myPurchases.includes(i.id))?.id;
+  const hasCustomEmoji = activeEmojiId || myPurchases.includes('custom_emoji');
   const customEmoji = useMemo(() => {
     if (!hasCustomEmoji) return null;
-    const purchasedEmojiItem = STORE_ITEMS.find(item => item.category === 'emoji' && myPurchases.includes(item.id));
+    const purchasedEmojiItem = STORE_ITEMS.find(item => item.id === activeEmojiId);
     if (purchasedEmojiItem) return purchasedEmojiItem.value;
     try {
       const emojis = JSON.parse(localStorage.getItem('moo_custom_emojis') || '{}');
-      return emojis[student?.personal?.id] || '🌟';
-    } catch { return '🌟'; }
-  }, [hasCustomEmoji, myPurchases, student?.personal?.id, syncTrigger]);
+      return emojis[student?.personal?.id] || '😎';
+    } catch { return '😎'; }
+  }, [hasCustomEmoji, activeEmojiId, student?.personal?.id, syncTrigger]);
 
   // 🔥 إصلاح: حساب weeklyCommitment الحقيقي من سجل الحضور
   const weeklyCommitment = useMemo(() => {
