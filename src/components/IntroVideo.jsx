@@ -34,14 +34,10 @@ export default function IntroVideo({ onFinished }) {
         muted
         onEnded={handleVideoEnd}
         onError={handleVideoError}
-        className="w-full h-full object-cover scale-[1.05]"
+        className="w-full h-full object-cover"
         src="/intro.mp4"
       />
       
-      {/* Watermark Hider Overlay (Bottom Right) */}
-      <div className="absolute bottom-0 right-0 w-40 h-20 bg-[#111827] z-10" style={{ filter: 'blur(8px)' }}></div>
-      <div className="absolute bottom-0 right-0 w-32 h-16 bg-[#111827] z-10"></div>
-
       {showSkip && (
         <button
           onClick={handleVideoEnd}
