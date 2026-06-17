@@ -251,7 +251,7 @@ const AdminDashboard = ({ onLogout, account }) => {
 
   // 🔥 إصلاح: try/catch لحماية من QuotaExceededError
   useEffect(() => {
-    try { localStorage.setItem('moo_announcements', JSON.stringify(announcements));  window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync')); }
+    try { localStorage.setItem('moo_announcements', JSON.stringify(announcements));   }
     catch (e) { console.error('localStorage quota exceeded:', e); }
   }, [announcements]);
 
@@ -305,7 +305,7 @@ const AdminDashboard = ({ onLogout, account }) => {
   const updatePhases = (newPhases, updatedLessons = null) => {
     setPhases(newPhases);
     localStorage.setItem('moo_phases', JSON.stringify(newPhases));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     const freshMaster = getGlobalMaster();
     const allClasses = newPhases.reduce((acc, p) => [...acc, ...p.classes], []);
@@ -318,7 +318,7 @@ const AdminDashboard = ({ onLogout, account }) => {
 
     SyncAll(updatedMaster);
     setGlobalMaster(updatedMaster);
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
   };
 
   const toggleYoungClass = (className) => {
@@ -327,7 +327,7 @@ const AdminDashboard = ({ onLogout, account }) => {
       : [...youngClasses, className];
     setYoungClasses(updated);
     localStorage.setItem('moo_young_classes', JSON.stringify(updated));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
   };
 
   const handleAddClass = (phaseId, className) => {
@@ -376,7 +376,7 @@ const AdminDashboard = ({ onLogout, account }) => {
       : [toSave, ...announcements];
 
     setAnnouncements(updated);
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setNewAnnouncement({ id: '', text: '', target: 'all', priority: 'normal', startDate: '', endDate: '' });
     showToast('✅ تم حفظ ونشر الإعلان بنجاح!');
   };
@@ -384,7 +384,7 @@ const AdminDashboard = ({ onLogout, account }) => {
   const handleDeleteAnnouncement = (id) => {
     if (!window.confirm('حذف هذا الإعلان؟')) return;
     setAnnouncements(announcements.filter(a => a.id !== id));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     showToast('❌ تم حذف الإعلان');
   };
 
@@ -536,15 +536,15 @@ const AdminDashboard = ({ onLogout, account }) => {
 
     const updatedMaster = { ...freshMaster, settings: newSettings, lessons: updatedLessons };
     localStorage.setItem('schoolTemplate', JSON.stringify(newSchoolTemplate));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     localStorage.setItem('schoolMasterSchedule', JSON.stringify(newSchoolTemplate));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     SyncAll(updatedMaster);
     setGlobalMaster(updatedMaster);
     showToast('✅ تم تطبيق الهيكلة الزمنية والفسحة على جميع الجداول بنجاح!');
 
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
   };
 
   const stats = [
@@ -703,7 +703,7 @@ const AdminDashboard = ({ onLogout, account }) => {
 
         setWhitelist(newWhitelist);
         localStorage.setItem('moo_whitelist', JSON.stringify(newWhitelist));
-        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+        
         showToast(`✅ تم استيراد ${addedCount} طالب جديد، وتحديث ${updatedCount} طالب بنجاح!`);
       } catch (err) {
         showToast('❌ حدث خطأ أثناء الاستيراد! تأكد من صيغة الملف.');
@@ -738,7 +738,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     wallets[finalId] = 0;
     localStorage?.setItem?.('moo_wallets', JSON.stringify(wallets));
     setWallets(wallets);
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setNewStudent({ name: '', id: '', className: '', password: '', isExempted: false, parentName: '', parentPhone: '', parentPassword: '' });
     showToast(`✅ تم إضافة طالب: ${studentWithAutoId?.name}`);
   };
@@ -784,7 +784,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     const updatedStaff = [...(staff || []), { ...newStaff, role: actualRole, specialization: finalSpec, id: Date.now().toString() }];
     setStaff(updatedStaff);
     localStorage.setItem('moo_staff', JSON.stringify(updatedStaff));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     setNewStaff({ name: '', role: 'teacher', username: '', password: '', specialization: 'الرياضيات' });
     setCustomSubject('');
@@ -799,13 +799,13 @@ const AdminDashboard = ({ onLogout, account }) => {
       const wallets = JSON.parse(localStorage.getItem('moo_wallets') || '{}') || {};
       delete wallets[id];
       localStorage.setItem('moo_wallets', JSON.stringify(wallets));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
       setWallets(wallets);
       const notifs = JSON.parse(localStorage.getItem('moo_student_notifications') || '{}') || {};
       delete notifs[id];
       localStorage.setItem('moo_student_notifications', JSON.stringify(notifs));
     } catch { }
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     showToast('❌ تم الحذف');
   };
 
@@ -817,7 +817,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     const updatedStaffList = (staff || [])?.filter?.(s => s?.id !== id);
     setStaff(updatedStaffList);
     localStorage.setItem('moo_staff', JSON.stringify(updatedStaffList));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     if (staffToRemove?.role === 'teacher') {
       // أ. مسح الحصص من الجدول لتصبح خانات فارغة
@@ -830,7 +830,7 @@ const AdminDashboard = ({ onLogout, account }) => {
       const tests = JSON.parse(localStorage.getItem('moo_tests') || '[]');
       const remainingTests = tests.filter(t => t.teacherName !== staffToRemove.name);
       localStorage.setItem('moo_tests', JSON.stringify(remainingTests));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
 
       // ج. مسح اختبارات المعلم من بوابة الطلاب
       const exams = JSON.parse(localStorage.getItem('exams') || '[]');
@@ -838,7 +838,7 @@ const AdminDashboard = ({ onLogout, account }) => {
       localStorage.setItem('exams', JSON.stringify(remainingExams));
     }
 
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     window.dispatchEvent(new CustomEvent('moo-sync'));
     showToast('❌ تم الحذف وتطهير بيانات الموظف بنجاح');
   };
@@ -868,7 +868,7 @@ const AdminDashboard = ({ onLogout, account }) => {
           wallets[editingStudent.id] = wallets[oldId];
           delete wallets[oldId];
           localStorage.setItem('moo_wallets', JSON.stringify(wallets));
-          window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+          
           setWallets(wallets);
         }
         const notifs = JSON.parse(localStorage.getItem('moo_student_notifications') || '{}') || {};
@@ -876,11 +876,11 @@ const AdminDashboard = ({ onLogout, account }) => {
           notifs[editingStudent.id] = notifs[oldId];
           delete notifs[oldId];
           localStorage.setItem('moo_student_notifications', JSON.stringify(notifs));
-          window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+          
         }
       } catch { }
     }
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setEditingStudent(null);
     showToast('✅ تم حفظ تعديلات الطالب بنجاح');
   };
@@ -919,7 +919,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     const updatedStaffList = (staff || []).map(s => s.id === sid ? cleanStaff : s);
     setStaff(updatedStaffList);
     localStorage.setItem('moo_staff', JSON.stringify(updatedStaffList));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // لو تغيّر اسم المعلم نحدّث اسمه في كل الحصص المرتبطة به
     if (oldStaff?.role === 'teacher' && oldStaff?.name !== cleanStaff.name) {
@@ -929,7 +929,7 @@ const AdminDashboard = ({ onLogout, account }) => {
       setGlobalMaster(master);
     }
 
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     window.dispatchEvent(new CustomEvent('moo-sync'));
     setEditingStaff(null);
     showToast('✅ تم حفظ تعديلات الموظف بنجاح');
@@ -1000,7 +1000,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     };
     const updatedTransactions = [newTransaction, ...walletTransactions].slice(0, 20); // الاحتفاظ بآخر 20 عملية فقط
     localStorage.setItem('moo_wallet_transactions', JSON.stringify(updatedTransactions));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setWalletTransactions(updatedTransactions);
 
     window?.dispatchEvent?.(new Event('storage'));
@@ -1012,7 +1012,7 @@ const AdminDashboard = ({ onLogout, account }) => {
   const handleClearLog = () => {
     setWalletTransactions([]);
     localStorage.removeItem('moo_wallet_transactions');
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setConfirmClearLog(false);
     showToast('✅ تم مسح السجل بنجاح');
   };
@@ -1152,7 +1152,7 @@ const AdminDashboard = ({ onLogout, account }) => {
         Object.keys(data).forEach(k => {
           if (BACKUP_KEYS.includes(k) && typeof data[k] === 'string') {
             localStorage.setItem(k, data[k]);
-            window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+            
           }
         });        // تحديث الحالة المحلية بعد الاستيراد
         try { setWhitelist(JSON.parse(localStorage.getItem('moo_whitelist') || '[]')); } catch { /* */ }
@@ -1162,7 +1162,7 @@ const AdminDashboard = ({ onLogout, account }) => {
         try { setPhases(JSON.parse(localStorage.getItem('moo_phases') || '[]')); } catch { /* */ }
         try { setWallets(JSON.parse(localStorage.getItem('moo_wallets') || '{}')); } catch { /* */ }
         setGlobalMaster(getGlobalMaster());
-        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+        
         showToast('✅ تم استيراد النسخة الاحتياطية بنجاح');
       } catch (err) {
         console.error(err);
@@ -2591,17 +2591,17 @@ const AdminDashboard = ({ onLogout, account }) => {
                                         const resetWallets = {};
                                         wl.forEach(s => { resetWallets[s.id] = 0; });
                                         localStorage.setItem('moo_wallets', JSON.stringify(resetWallets));
-                                        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+                                        
                                         setWallets(resetWallets);
                                       } else if (item.special === 'attendance') {
                                         item.keys.forEach(k => localStorage.removeItem(k));
                                         const wl = JSON.parse(localStorage.getItem('moo_whitelist') || '[]');
                                         localStorage.setItem('moo_whitelist', JSON.stringify(wl.map(s => ({ ...s, totalClasses: 0, attendedClasses: 0, attendancePercentage: 0 }))));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
                                       } else {
                                         item.keys.forEach(k => localStorage.removeItem(k));
                                       }
-                                      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+                                      
                                       showToast(`✅ تم ${item.title} بنجاح`);
                                     }
                                   });
@@ -2628,7 +2628,7 @@ const AdminDashboard = ({ onLogout, account }) => {
                                 isDanger: false,
                                 action: () => {
                                   ['moo_grades', 'moo_paper_exam_grades', 'moo_paper_exam_archive', 'exams', 'moo_tests', 'moo_exams_migrated', 'moo_student_notifications', 'moo_notifications', 'moo_complaints'].forEach(k => localStorage.removeItem(k));
-                                  window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+                                  
                                   showToast('✅ تمت تهيئة نصف السنة بنجاح — النظام جاهز للترم الثاني');
                                 }
                               });
@@ -2650,14 +2650,14 @@ const AdminDashboard = ({ onLogout, account }) => {
                                 isDanger: true,
                                 action: () => {
                                   ['moo_attendance', 'moo_daily_attendance_manual', 'moo_grades', 'moo_paper_exam_grades', 'moo_paper_exam_archive', 'exams', 'moo_tests', 'moo_exams_migrated', 'moo_question_bank', 'moo_achievements', 'moo_pinned_badges', 'moo_student_notifications', 'moo_notifications', 'moo_complaints'].forEach(k => localStorage.removeItem(k));
-                                  window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+                                  
                                   const wl = JSON.parse(localStorage.getItem('moo_whitelist') || '[]');
                                   const resetWallets = {};
                                   wl.forEach(s => { resetWallets[s.id] = 0; });
                                   localStorage.setItem('moo_wallets', JSON.stringify(resetWallets));
                                   setWallets(resetWallets);
                                   localStorage.setItem('moo_whitelist', JSON.stringify(wl.map(s => ({ ...s, totalClasses: 0, attendedClasses: 0, attendancePercentage: 0 }))));
-                                  window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+                                  
                                   showToast('✅ تمت التهيئة الشاملة بنجاح — النظام جاهز لسنة دراسية جديدة');
                                 }
                               });
@@ -2827,7 +2827,7 @@ const AdminDashboard = ({ onLogout, account }) => {
                                         const allGraduates = [...graduates, ...newGraduates];
                                         setGraduates(allGraduates);
                                         localStorage.setItem('moo_graduates', JSON.stringify(allGraduates));
-                                        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+                                        
 
                                         // حفظ الطلاب بعد الترحيل
                                         setWhitelist(updatedWhitelist);
@@ -2835,7 +2835,7 @@ const AdminDashboard = ({ onLogout, account }) => {
                                         // مسح بيانات السنة القديمة
                                         ['moo_attendance', 'moo_daily_attendance_manual', 'moo_grades', 'moo_paper_exam_grades', 'moo_paper_exam_archive', 'exams', 'moo_tests', 'moo_exams_migrated', 'moo_achievements', 'moo_pinned_badges', 'moo_student_notifications', 'moo_notifications', 'moo_complaints'].forEach(k => localStorage.removeItem(k));
 
-                                        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+                                        
                                         setShowPromotionModal(false);
                                         showToast(`✅ تم الترحيل بنجاح! ${updatedWhitelist.length} طالب تم ترحيلهم + ${newGraduates.length} خريج تم تسجيلهم`);
                                       }

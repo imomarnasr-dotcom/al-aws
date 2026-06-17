@@ -54,7 +54,7 @@ const cleanAndFetchExams = () => {
 
     if (validExams.length !== fromOld.length) {
       localStorage.setItem('exams', JSON.stringify(validExams));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
     }
 
     return [...mergedFromTeacher, ...validExams.filter(e => !fromTeacher.find(t => t.id === e.id))];
@@ -125,7 +125,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
         currentQIndex
       };
       localStorage.setItem('moo_active_exam_state', JSON.stringify(stateToSave));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
     }
   }, [activeExam, answers, timeLeft, currentQIndex, studentData?.personal?.id]);
 
@@ -264,7 +264,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
 
     setExams(updatedExams);
     localStorage.setItem('exams', JSON.stringify(updatedExams));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 🔥 إصلاح: نحفظ الـ reports في moo_tests كمان عشان cleanAndFetchExams تلاقيها بعد refresh
     try {
@@ -277,7 +277,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
         return ex;
       });
       localStorage.setItem('moo_tests', JSON.stringify(updatedTeacherExams));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
     } catch { /* لو فشل مش كارثة، exams هو المصدر الأساسي */ }
 
     // 🔥 إصلاح: نقل درجات الاختبار الأونلاين تلقائياً إلى moo_grades ليراها المعلم
@@ -297,16 +297,16 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
       
       moGrades[gradeKey][studentData.personal.id] = percentage;
       localStorage.setItem('moo_grades', JSON.stringify(moGrades));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
     } catch (e) {
       console.warn('❌ خطأ في نقل الدرجات إلى moo_grades:', e);
     }
 
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 🔥 إصلاح: مسح حالة الاختبار المحفوظة بعد التسليم
     localStorage.removeItem('moo_active_exam_state');
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     setActiveExam(null);
 
@@ -408,7 +408,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
     });
     setExams(updatedExams);
     localStorage.setItem('exams', JSON.stringify(updatedExams));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     setActiveExam(exam);
     setAnswers({});

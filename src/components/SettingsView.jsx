@@ -67,7 +67,7 @@ const SettingsView = ({ studentData, setStudentData, onLogout, studentPassword }
       const wl = JSON.parse(localStorage.getItem('moo_whitelist') || '[]');
       const updated = wl.map(s => s.id === studentData?.personal?.id ? { ...s, password: pwForm.newPw } : s);
       localStorage.setItem('moo_whitelist', JSON.stringify(updated));
-      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+      
     } catch { }
     setPwMsg({ text: '✅ تم تغيير كلمة المرور بنجاح!', ok: true });
     setPwForm({ current: '', newPw: '', confirm: '' });
@@ -90,7 +90,7 @@ const [theme, setTheme] = useState({
     const newVal = !magicCursor;
     setMagicCursor(newVal);
     localStorage.setItem('moo_magic_cursor', newVal.toString());
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     window.dispatchEvent(new Event('magic_cursor_toggled'));
   };
 
@@ -110,9 +110,9 @@ const [theme, setTheme] = useState({
 
   const saveThemeSettings = () => {
     localStorage.setItem('moo_theme_primary', theme.primary);
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     localStorage.setItem('moo_theme_bg', theme.bg);
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setThemeMsg({ text: '✅ تم حفظ الثيم بنجاح!', ok: true });
     setTimeout(() => setThemeMsg({ text: '', ok: false }), 3000);
   };
@@ -141,7 +141,7 @@ const [theme, setTheme] = useState({
 
     complaints.push(newComplaint);
     localStorage.setItem('moo_complaints', JSON.stringify(complaints));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     setComplaintSubject('');
     setComplaintText('');

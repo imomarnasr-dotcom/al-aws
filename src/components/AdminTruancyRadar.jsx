@@ -65,13 +65,13 @@ const AdminTruancyRadar = () => {
     if (!allPenalized[today]) allPenalized[today] = {};
     allPenalized[today][student.id] = true;
     localStorage.setItem('moo_truancy_penalized', JSON.stringify(allPenalized));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 2. Deduct 5 Reward Points
     const spentPoints = JSON.parse(localStorage.getItem('moo_spent_points') || '{}');
     spentPoints[student.id] = (spentPoints[student.id] || 0) + 5;
     localStorage.setItem('moo_spent_points', JSON.stringify(spentPoints));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 3. Deduct Behavior Points
     const behaviorLogs = JSON.parse(localStorage.getItem('moo_behavior_logs') || '{}');
@@ -82,7 +82,7 @@ const AdminTruancyRadar = () => {
       points: -2
     });
     localStorage.setItem('moo_behavior_logs', JSON.stringify(behaviorLogs));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 4. Send Parent Notification
     const parentNotes = JSON.parse(localStorage.getItem('moo_parent_notifications') || '{}');
@@ -97,7 +97,7 @@ const AdminTruancyRadar = () => {
     localStorage.setItem('moo_parent_notifications', JSON.stringify(parentNotes));
 
     loadData();
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
   };
 
   useEffect(() => {

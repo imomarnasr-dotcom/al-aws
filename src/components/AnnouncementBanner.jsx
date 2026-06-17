@@ -11,7 +11,7 @@ const AnnouncementBanner = () => {
         const newHidden = [...hidden, id];
         setHidden(newHidden);
         localStorage.setItem('moo_hidden_announcements', JSON.stringify(newHidden));
-        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+        
     };
 
     useEffect(() => {

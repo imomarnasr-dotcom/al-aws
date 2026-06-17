@@ -13,7 +13,7 @@ const AdminDailyScanner = () => {
     const newVal = !autoMode;
     setAutoMode(newVal);
     localStorage.setItem('moo_auto_attendance_enabled', JSON.stringify(newVal));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
   };
 
   const calculateDailyAttendance = () => {

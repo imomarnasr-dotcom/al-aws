@@ -84,13 +84,13 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
   const updateMenuState = (newMenu) => {
     setMenu(newMenu);
     localStorage.setItem('moo_cafeteria_menu', JSON.stringify(newMenu));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
   };
 
   const updateOrdersState = (newOrders) => {
     setOrders(newOrders);
     localStorage.setItem('moo_cafeteria_orders', JSON.stringify(newOrders));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
   };
 
   // 2. LIFECYCLE (SYNC ONLY)
@@ -275,12 +275,12 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
     const updatedWallets = { ...wallets, [scannedStudent.id]: currentBalance - totalToDeduct };
     setWallets(updatedWallets);
     localStorage.setItem('moo_wallets', JSON.stringify(updatedWallets));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 2. Add to vault
     const currentVault = parseFloat(localStorage.getItem('moo_school_vault')) || 0;
     localStorage.setItem('moo_school_vault', (currentVault + totalToDeduct).toString());
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 3. Log transaction
     const txLog = JSON.parse(localStorage.getItem('moo_wallet_transactions')) || [];
@@ -293,7 +293,7 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
       date: new Date().toISOString()
     };
     localStorage.setItem('moo_wallet_transactions', JSON.stringify([newTx, ...txLog].slice(0, 50)));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
 
     // 5. Update Menu inventory if cart was used
     if (cart.length > 0) {
@@ -320,7 +320,7 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
     
     updateOrdersState([newOrder, ...orders]);
 
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     
     playSound('success');
     showToast(`✅ تم إتمام العملية بنجاح! خصم ${totalToDeduct} ر.س`);
@@ -352,13 +352,13 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
     const currentBalance = currentWallets[orderToRefund.studentId] || 0;
     currentWallets[orderToRefund.studentId] = currentBalance + refundAmount;
     localStorage.setItem('moo_wallets', JSON.stringify(currentWallets));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setWallets(currentWallets);
     
     // 2. Deduct from vault
     const currentVault = parseFloat(localStorage.getItem('moo_school_vault')) || 0;
     localStorage.setItem('moo_school_vault', (currentVault - refundAmount).toString());
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     
     // 3. Log refund transaction
     const txLog = JSON.parse(localStorage.getItem('moo_wallet_transactions')) || [];
@@ -373,7 +373,7 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
         note: note
         };
         localStorage.setItem('moo_wallet_transactions', JSON.stringify([newTx, ...txLog].slice(0, 50)));
-        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+        
     }
     
     // 4. Update orders (remove it completely)
@@ -388,7 +388,7 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
        updateMenuState(currentMenu);
     }
     
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     showToast('تم إرجاع الطلب وإعادة الرصيد والمخزون بنجاح!');
   };
 
@@ -416,13 +416,13 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
     const currentWallets = JSON.parse(localStorage.getItem('moo_wallets')) || {};
     currentWallets[orderToCancel.studentId] = (currentWallets[orderToCancel.studentId] || 0) + orderToCancel.total;
     localStorage.setItem('moo_wallets', JSON.stringify(currentWallets));
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     setWallets(currentWallets);
     
     // 2. Deduct from vault
     const currentVault = parseFloat(localStorage.getItem('moo_school_vault')) || 0;
     localStorage.setItem('moo_school_vault', (currentVault - orderToCancel.total).toString());
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     
     // 3. Log refund transaction
     const txLog = JSON.parse(localStorage.getItem('moo_wallet_transactions')) || [];
@@ -437,8 +437,8 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
           note: 'إلغاء الطلب (غير متوفر)'
         });
         localStorage.setItem('moo_wallet_transactions', JSON.stringify(txLog.slice(0, 50)));
-        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
-        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+        
+        
     }
     
     // 4. Update orders (remove it completely)
@@ -453,7 +453,7 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
        updateMenuState(currentMenu);
     }
     
-    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+    
     playSound('success');
     window.dispatchEvent(new CustomEvent('moo-toast', { detail: { message: 'تم إلغاء الطلب وإرجاع المبلغ للطالب!', type: 'success' } }));
   };
@@ -509,14 +509,14 @@ const CafeteriaAdminDashboard = ({ onLogout }) => {
      });
 
      localStorage.setItem('moo_wallets', JSON.stringify(currentWallets));
-     window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+     
      localStorage.setItem('moo_school_vault', currentVault.toString());
-     window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+     
      localStorage.setItem('moo_wallet_transactions', JSON.stringify(txLog.slice(0, 50)));
      updateMenuState(currentMenu);
      updateOrdersState(updatedOrders.filter(o => o.status === 'completed' || o.source === 'pos'));
 
-       window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
+       
        window.dispatchEvent(new CustomEvent('moo-toast', { detail: { message: 'تم إنهاء اليوم الدراسي بنجاح!', type: 'success' } }));
       }
     };
