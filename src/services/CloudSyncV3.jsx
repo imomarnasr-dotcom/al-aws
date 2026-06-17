@@ -163,7 +163,7 @@ export default function CloudSyncV3({ onReady }) {
       window.removeEventListener('appStorage-updated', handleLocalUpdate);
       Object.values(debounceTimers.current).forEach(clearTimeout);
     };
-  }, [onReady]);
+  }, []);
 
   const chunkArray = (array, size) => {
     const chunked = [];
