@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { db } from '../config/firebase';
-import { collection, doc, setDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
 import appStorage from '../utils/appStorage';
 
 // Small settings that don't need partitioning
@@ -156,11 +156,48 @@ export default function CloudSyncV3({ onReady }) {
       }, 1500); // Debounce
     };
 
+    const handleHardReset = async () => {
+      try {
+        const collectionsToClear = [
+          'system_v3_students', 'system_v3_attendance', 'system_v3_manual_attendance', 
+          'system_v3_grades', 'system_v3_wallets', 'system_v3_behavior_logs', 
+          'system_v3_achievements', 'system_v3_student_notifications', 'system_v3_parent_notifications',
+          'system_v3_general'
+        ];
+        
+        for (const coll of collectionsToClear) {
+          const snap = await getDocs(collection(db, coll));
+          const chunks = chunkArray(snap.docs, 450);
+          for (const chunk of chunks) {
+            const batch = writeBatch(db);
+            chunk.forEach(docSnap => batch.delete(docSnap.ref));
+            await batch.commit();
+          }
+        }
+        
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('moo_') || key === 'GLOBAL_ACADEMIC_MASTER' || key === 'exams') {
+            if (key !== 'moo_admin_credentials') {
+               localStorage.removeItem(key);
+            }
+          }
+        });
+        
+        window.dispatchEvent(new CustomEvent('moo-toast', { detail: { message: 'تم إعادة تهيئة النظام بالكامل بنجاح', type: 'success' }}));
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (e) {
+        console.error("Factory Reset Error:", e);
+        window.dispatchEvent(new CustomEvent('moo-toast', { detail: { message: 'حدث خطأ أثناء مسح قاعدة البيانات', type: 'error' }}));
+      }
+    };
+
     window.addEventListener('appStorage-updated', handleLocalUpdate);
+    window.addEventListener('moo-hard-factory-reset', handleHardReset);
 
     return () => {
       unsubs.forEach(u => u());
       window.removeEventListener('appStorage-updated', handleLocalUpdate);
+      window.removeEventListener('moo-hard-factory-reset', handleHardReset);
       Object.values(debounceTimers.current).forEach(clearTimeout);
     };
   }, []);

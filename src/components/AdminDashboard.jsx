@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -2648,18 +2648,7 @@ const AdminDashboard = ({ onLogout, account }) => {
                                 title: '☢️ تهيئة شاملة',
                                 desc: 'تحذير نهائي: سيتم مسح كل بيانات النظام بما فيها الحضور والدرجات والاختبارات والأوسمة والأرصدة!',
                                 isDanger: true,
-                                action: () => {
-                                  ['moo_attendance', 'moo_daily_attendance_manual', 'moo_grades', 'moo_paper_exam_grades', 'moo_paper_exam_archive', 'exams', 'moo_tests', 'moo_exams_migrated', 'moo_question_bank', 'moo_achievements', 'moo_pinned_badges', 'moo_student_notifications', 'moo_notifications', 'moo_complaints'].forEach(k => localStorage.removeItem(k));
-                                  
-                                  const wl = JSON.parse(localStorage.getItem('moo_whitelist') || '[]');
-                                  const resetWallets = {};
-                                  wl.forEach(s => { resetWallets[s.id] = 0; });
-                                  localStorage.setItem('moo_wallets', JSON.stringify(resetWallets));
-                                  setWallets(resetWallets);
-                                  localStorage.setItem('moo_whitelist', JSON.stringify(wl.map(s => ({ ...s, totalClasses: 0, attendedClasses: 0, attendancePercentage: 0 }))));
-                                  
-                                  showToast('✅ تمت التهيئة الشاملة بنجاح — النظام جاهز لسنة دراسية جديدة');
-                                }
+                                action: () => { window.dispatchEvent(new CustomEvent('moo-hard-factory-reset')); }
                               });
                             }}
                             className="w-full py-3 bg-red-600 text-white rounded-2xl font-black hover:bg-red-700 transition-colors"
@@ -3512,4 +3501,5 @@ const AdminDashboard = ({ onLogout, account }) => {
 
 export default AdminDashboard;
 AdminDashboard.propTypes = { onLogout: PropTypes.func.isRequired };
+
 
