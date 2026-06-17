@@ -6,10 +6,9 @@ export default function IntroVideo({ onFinished }) {
   const [hasError, setHasError] = useState(false);
   const videoRef = useRef(null);
 
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
 
   useEffect(() => {
-    setIsDesktop(window.innerWidth >= 768);
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
     window.addEventListener('resize', handleResize);
     // Show skip button after 2 seconds just in case they want to bypass it
@@ -34,7 +33,7 @@ export default function IntroVideo({ onFinished }) {
   if (hasError) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#111827] flex items-center justify-center overflow-hidden">
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden ${isDesktop ? 'bg-black' : 'bg-[#111827]'}`}>
       <video
         ref={videoRef}
         autoPlay
@@ -44,7 +43,7 @@ export default function IntroVideo({ onFinished }) {
         poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         onEnded={handleVideoEnd}
         onError={handleVideoError}
-        className={`w-full h-full object-cover bg-[#111827] ${!isDesktop && 'object-[center_top]'}`}
+        className={`w-full h-full object-cover ${!isDesktop ? 'bg-[#111827] object-[center_top]' : 'bg-black'}`}
         src={isDesktop ? "/intro_desktop.mp4" : "/intro.mp4"}
       />
       

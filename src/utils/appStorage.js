@@ -52,13 +52,16 @@ class AppStorage {
       return;
     }
     
-    // Convert to string to perfectly emulate localStorage behavior
     this.data[key] = String(value);
     
-    // Emulate window 'storage' event which components might rely on
+    try {
+      originalLocalStorage.setItem(key, value);
+    } catch (e) {
+      console.warn("Storage quota exceeded. Falling back to RAM only for this key:", key);
+    }
+    
     if (!silent) {
       window.dispatchEvent(new Event('storage'));
-      // Custom event for our app to force syncs
       window.dispatchEvent(new CustomEvent('appStorage-updated', { detail: { key, value } }));
     }
   }
@@ -69,6 +72,9 @@ class AppStorage {
       return;
     }
     delete this.data[key];
+    try {
+      originalLocalStorage.removeItem(key);
+    } catch (e) { }
     if (!silent) {
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('appStorage-updated', { detail: { key, value: null } }));
@@ -77,6 +83,9 @@ class AppStorage {
 
   clear() {
     this.data = {};
+    try {
+      originalLocalStorage.clear();
+    } catch (e) { }
     window.dispatchEvent(new Event('storage'));
   }
 
