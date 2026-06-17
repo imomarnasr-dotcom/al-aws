@@ -23,6 +23,7 @@ const AdminSmartAttendance = () => {
 
       if (allGraces.length !== currentGraces.length) {
         localStorage.setItem('moo_grace_periods', JSON.stringify(currentGraces));
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       }
 
       setGracePeriods(currentGraces);
@@ -132,6 +133,7 @@ const AdminSmartAttendance = () => {
     };
     gp.push(newGrace);
     localStorage.setItem('moo_grace_periods', JSON.stringify(gp));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // إرسال إشعار للمعلم
     const notifs = JSON.parse(localStorage.getItem('moo_notifications') || '[]');
@@ -161,6 +163,7 @@ const AdminSmartAttendance = () => {
     // تسجيل الكل كحاضرين
     attendanceHistory[key] = {};
     localStorage.setItem('moo_attendance', JSON.stringify(attendanceHistory));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // إرسال إشعار للمعلم
     const notifs = JSON.parse(localStorage.getItem('moo_notifications') || '[]');

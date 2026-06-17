@@ -54,6 +54,7 @@ const cleanAndFetchExams = () => {
 
     if (validExams.length !== fromOld.length) {
       localStorage.setItem('exams', JSON.stringify(validExams));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
 
     return [...mergedFromTeacher, ...validExams.filter(e => !fromTeacher.find(t => t.id === e.id))];
@@ -124,6 +125,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
         currentQIndex
       };
       localStorage.setItem('moo_active_exam_state', JSON.stringify(stateToSave));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
   }, [activeExam, answers, timeLeft, currentQIndex, studentData?.personal?.id]);
 
@@ -159,6 +161,43 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
       const exClass = ex.classCode || getExamClassKey(ex);
       return exClass === studentClass || ex.stage === studentClass;
     });
+    
+    // Filter out missed/expired exams as per user request
+    filtered = filtered.filter(ex => {
+      const isDone = ex.reports?.some(r => r.studentId === studentData.personal.id);
+      if (isDone) return true; // Show taken exams so they can see result
+      
+      let examDateObj;
+      if (ex.date) {
+        examDateObj = new Date(ex.date);
+      } else {
+        const createdAtTime = Number(ex.id);
+        if (createdAtTime > 1600000000000) {
+          const createdDate = new Date(createdAtTime);
+          const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+          const createdDayIndex = createdDate.getDay();
+          const examDayIndex = days.indexOf(ex.day);
+          if (examDayIndex !== -1) {
+            let daysToAdd = (examDayIndex - createdDayIndex + 7) % 7;
+            examDateObj = new Date(createdDate.getFullYear(), createdDate.getMonth(), createdDate.getDate() + daysToAdd);
+          } else {
+            examDateObj = new Date();
+          }
+        } else {
+          examDateObj = new Date();
+        }
+      }
+      
+      const examTime = parseTodayTime(ex.time, examDateObj);
+      if (!examTime) return false;
+      
+      const endTime = new Date(examTime.getTime() + (ex.duration || 60) * 60000);
+      if (new Date() > endTime) {
+        return false; // Exam is expired and not done
+      }
+      return true;
+    });
+
     if (searchQuery.trim()) {
       filtered = filtered.filter(ex =>
         (ex.title || '').includes(searchQuery) || (ex.subject || '').includes(searchQuery)
@@ -225,6 +264,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
 
     setExams(updatedExams);
     localStorage.setItem('exams', JSON.stringify(updatedExams));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // 🔥 إصلاح: نحفظ الـ reports في moo_tests كمان عشان cleanAndFetchExams تلاقيها بعد refresh
     try {
@@ -237,6 +277,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
         return ex;
       });
       localStorage.setItem('moo_tests', JSON.stringify(updatedTeacherExams));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     } catch { /* لو فشل مش كارثة، exams هو المصدر الأساسي */ }
 
     // 🔥 إصلاح: نقل درجات الاختبار الأونلاين تلقائياً إلى moo_grades ليراها المعلم
@@ -256,6 +297,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
       
       moGrades[gradeKey][studentData.personal.id] = percentage;
       localStorage.setItem('moo_grades', JSON.stringify(moGrades));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     } catch (e) {
       console.warn('❌ خطأ في نقل الدرجات إلى moo_grades:', e);
     }
@@ -264,6 +306,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
 
     // 🔥 إصلاح: مسح حالة الاختبار المحفوظة بعد التسليم
     localStorage.removeItem('moo_active_exam_state');
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     setActiveExam(null);
 
@@ -365,6 +408,7 @@ const ExamsView = ({ studentData, setStudentData, searchQuery = '' }) => {
     });
     setExams(updatedExams);
     localStorage.setItem('exams', JSON.stringify(updatedExams));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     setActiveExam(exam);
     setAnswers({});

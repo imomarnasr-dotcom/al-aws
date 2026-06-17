@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -251,7 +251,7 @@ const AdminDashboard = ({ onLogout, account }) => {
 
   // 🔥 إصلاح: try/catch لحماية من QuotaExceededError
   useEffect(() => {
-    try { localStorage.setItem('moo_announcements', JSON.stringify(announcements)); }
+    try { localStorage.setItem('moo_announcements', JSON.stringify(announcements));  window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync')); }
     catch (e) { console.error('localStorage quota exceeded:', e); }
   }, [announcements]);
 
@@ -305,6 +305,7 @@ const AdminDashboard = ({ onLogout, account }) => {
   const updatePhases = (newPhases, updatedLessons = null) => {
     setPhases(newPhases);
     localStorage.setItem('moo_phases', JSON.stringify(newPhases));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     const freshMaster = getGlobalMaster();
     const allClasses = newPhases.reduce((acc, p) => [...acc, ...p.classes], []);
@@ -535,7 +536,9 @@ const AdminDashboard = ({ onLogout, account }) => {
 
     const updatedMaster = { ...freshMaster, settings: newSettings, lessons: updatedLessons };
     localStorage.setItem('schoolTemplate', JSON.stringify(newSchoolTemplate));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     localStorage.setItem('schoolMasterSchedule', JSON.stringify(newSchoolTemplate));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     SyncAll(updatedMaster);
     setGlobalMaster(updatedMaster);
@@ -781,6 +784,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     const updatedStaff = [...(staff || []), { ...newStaff, role: actualRole, specialization: finalSpec, id: Date.now().toString() }];
     setStaff(updatedStaff);
     localStorage.setItem('moo_staff', JSON.stringify(updatedStaff));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     setNewStaff({ name: '', role: 'teacher', username: '', password: '', specialization: 'الرياضيات' });
     setCustomSubject('');
@@ -795,6 +799,7 @@ const AdminDashboard = ({ onLogout, account }) => {
       const wallets = JSON.parse(localStorage.getItem('moo_wallets') || '{}') || {};
       delete wallets[id];
       localStorage.setItem('moo_wallets', JSON.stringify(wallets));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       setWallets(wallets);
       const notifs = JSON.parse(localStorage.getItem('moo_student_notifications') || '{}') || {};
       delete notifs[id];
@@ -812,6 +817,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     const updatedStaffList = (staff || [])?.filter?.(s => s?.id !== id);
     setStaff(updatedStaffList);
     localStorage.setItem('moo_staff', JSON.stringify(updatedStaffList));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     if (staffToRemove?.role === 'teacher') {
       // أ. مسح الحصص من الجدول لتصبح خانات فارغة
@@ -824,6 +830,7 @@ const AdminDashboard = ({ onLogout, account }) => {
       const tests = JSON.parse(localStorage.getItem('moo_tests') || '[]');
       const remainingTests = tests.filter(t => t.teacherName !== staffToRemove.name);
       localStorage.setItem('moo_tests', JSON.stringify(remainingTests));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
       // ج. مسح اختبارات المعلم من بوابة الطلاب
       const exams = JSON.parse(localStorage.getItem('exams') || '[]');
@@ -861,6 +868,7 @@ const AdminDashboard = ({ onLogout, account }) => {
           wallets[editingStudent.id] = wallets[oldId];
           delete wallets[oldId];
           localStorage.setItem('moo_wallets', JSON.stringify(wallets));
+          window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
           setWallets(wallets);
         }
         const notifs = JSON.parse(localStorage.getItem('moo_student_notifications') || '{}') || {};
@@ -868,6 +876,7 @@ const AdminDashboard = ({ onLogout, account }) => {
           notifs[editingStudent.id] = notifs[oldId];
           delete notifs[oldId];
           localStorage.setItem('moo_student_notifications', JSON.stringify(notifs));
+          window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
         }
       } catch { }
     }
@@ -910,6 +919,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     const updatedStaffList = (staff || []).map(s => s.id === sid ? cleanStaff : s);
     setStaff(updatedStaffList);
     localStorage.setItem('moo_staff', JSON.stringify(updatedStaffList));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // لو تغيّر اسم المعلم نحدّث اسمه في كل الحصص المرتبطة به
     if (oldStaff?.role === 'teacher' && oldStaff?.name !== cleanStaff.name) {
@@ -990,6 +1000,7 @@ const AdminDashboard = ({ onLogout, account }) => {
     };
     const updatedTransactions = [newTransaction, ...walletTransactions].slice(0, 20); // الاحتفاظ بآخر 20 عملية فقط
     localStorage.setItem('moo_wallet_transactions', JSON.stringify(updatedTransactions));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     setWalletTransactions(updatedTransactions);
 
     window?.dispatchEvent?.(new Event('storage'));
@@ -1001,6 +1012,7 @@ const AdminDashboard = ({ onLogout, account }) => {
   const handleClearLog = () => {
     setWalletTransactions([]);
     localStorage.removeItem('moo_wallet_transactions');
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     setConfirmClearLog(false);
     showToast('✅ تم مسح السجل بنجاح');
   };
@@ -1140,6 +1152,7 @@ const AdminDashboard = ({ onLogout, account }) => {
         Object.keys(data).forEach(k => {
           if (BACKUP_KEYS.includes(k) && typeof data[k] === 'string') {
             localStorage.setItem(k, data[k]);
+            window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
           }
         });        // تحديث الحالة المحلية بعد الاستيراد
         try { setWhitelist(JSON.parse(localStorage.getItem('moo_whitelist') || '[]')); } catch { /* */ }
@@ -2578,11 +2591,13 @@ const AdminDashboard = ({ onLogout, account }) => {
                                         const resetWallets = {};
                                         wl.forEach(s => { resetWallets[s.id] = 0; });
                                         localStorage.setItem('moo_wallets', JSON.stringify(resetWallets));
+                                        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
                                         setWallets(resetWallets);
                                       } else if (item.special === 'attendance') {
                                         item.keys.forEach(k => localStorage.removeItem(k));
                                         const wl = JSON.parse(localStorage.getItem('moo_whitelist') || '[]');
                                         localStorage.setItem('moo_whitelist', JSON.stringify(wl.map(s => ({ ...s, totalClasses: 0, attendedClasses: 0, attendancePercentage: 0 }))));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
                                       } else {
                                         item.keys.forEach(k => localStorage.removeItem(k));
                                       }
@@ -2635,6 +2650,7 @@ const AdminDashboard = ({ onLogout, account }) => {
                                 isDanger: true,
                                 action: () => {
                                   ['moo_attendance', 'moo_daily_attendance_manual', 'moo_grades', 'moo_paper_exam_grades', 'moo_paper_exam_archive', 'exams', 'moo_tests', 'moo_exams_migrated', 'moo_question_bank', 'moo_achievements', 'moo_pinned_badges', 'moo_student_notifications', 'moo_notifications', 'moo_complaints'].forEach(k => localStorage.removeItem(k));
+                                  window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
                                   const wl = JSON.parse(localStorage.getItem('moo_whitelist') || '[]');
                                   const resetWallets = {};
                                   wl.forEach(s => { resetWallets[s.id] = 0; });
@@ -2811,6 +2827,7 @@ const AdminDashboard = ({ onLogout, account }) => {
                                         const allGraduates = [...graduates, ...newGraduates];
                                         setGraduates(allGraduates);
                                         localStorage.setItem('moo_graduates', JSON.stringify(allGraduates));
+                                        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
                                         // حفظ الطلاب بعد الترحيل
                                         setWhitelist(updatedWhitelist);

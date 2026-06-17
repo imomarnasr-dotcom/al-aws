@@ -3,6 +3,7 @@ import { useMemo, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import { safeMobileDownload } from '../utils/downloadUtils';
 const GradesView = ({ studentData, searchQuery = '' }) => {
   const academics = studentData?.academics || {};
   const staticSubjects = academics?.subjects || [];
@@ -188,10 +189,8 @@ const GradesView = ({ studentData, searchQuery = '' }) => {
         }
       });
       
-      const link = document.createElement('a');
-      link.download = `إشعار_درجات_${studentData?.personal?.name?.replace(/\s+/g, '_') || 'طالب'}.png`;
-      link.href = dataUrl;
-      link.click();
+      const fileName = `شهادة_طالب_${studentData?.personal?.name?.replace(/\s+/g, '_') || 'طالب'}.png`;
+        await safeMobileDownload(dataUrl, fileName, 'image/png');
     } catch (err) {
       console.error(err);
       alert('حدث خطأ أثناء استخراج الصورة: ' + (err.message || err));
@@ -271,7 +270,9 @@ const GradesView = ({ studentData, searchQuery = '' }) => {
         heightLeft -= pageHeight;
       }
       
-      pdf.save(`إشعار_درجات_${studentData?.personal?.name?.replace(/\s+/g, '_') || 'طالب'}.pdf`);
+      const pdfBase64 = pdf.output('datauristring');
+        const fileName = `إشعار_درجات_${studentData?.personal?.name?.replace(/\s+/g, '_') || 'طالب'}.pdf`;
+        await safeMobileDownload(pdfBase64, fileName, 'application/pdf');
     } catch (err) {
       console.error(err);
       alert('حدث خطأ أثناء استخراج الـ PDF: ' + (err.message || err));

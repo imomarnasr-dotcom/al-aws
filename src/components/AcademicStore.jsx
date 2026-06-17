@@ -32,6 +32,7 @@ const AcademicStore = ({ student, onClose }) => {
           document.documentElement.style.setProperty('--primary-color', '#7C3AED');
           document.documentElement.style.setProperty('--primary-rgb', '124, 58, 237');
           localStorage.removeItem('moo_theme_color');
+          window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
        }
        delete allActive[studentId][item.category];
     } else {
@@ -40,6 +41,7 @@ const AcademicStore = ({ student, onClose }) => {
           document.documentElement.style.setProperty('--primary-color', item.hex);
           document.documentElement.style.setProperty('--primary-rgb', item.rgb);
           localStorage.setItem('moo_theme_color', JSON.stringify({ hex: item.hex, rgb: item.rgb }));
+          window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
        }
     }
     
@@ -57,12 +59,14 @@ const AcademicStore = ({ student, onClose }) => {
     const allSpent = JSON.parse(localStorage.getItem('moo_spent_points') || '{}');
     allSpent[studentId] = (allSpent[studentId] || 0) + item.cost;
     localStorage.setItem('moo_spent_points', JSON.stringify(allSpent));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // إضافة للمشتريات
     const purchases = JSON.parse(localStorage.getItem('moo_store_purchases') || '{}');
     if (!purchases[studentId]) purchases[studentId] = [];
     purchases[studentId].push(item.id);
     localStorage.setItem('moo_store_purchases', JSON.stringify(purchases));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // Auto-equip the newly purchased item
     handleEquip(item);
@@ -80,6 +84,7 @@ const AcademicStore = ({ student, onClose }) => {
           pinned = pinned.slice(0, 4);
         }
         localStorage.setItem('moo_pinned_badges', JSON.stringify(pinned));
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       }
     } catch (e) {}
 

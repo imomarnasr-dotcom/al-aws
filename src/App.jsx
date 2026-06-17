@@ -342,6 +342,7 @@ const StudentProfile = ({ student, lastExamScore, onClose, onLogout, syncTrigger
     if (changed) {
       achievements[student.personal.id] = badges;
       localStorage.setItem('moo_achievements', JSON.stringify(achievements));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
       const studentNotifs = JSON.parse(localStorage.getItem('moo_student_notifications') || '{}');
       if (!studentNotifs[student.personal.id]) studentNotifs[student.personal.id] = [];
@@ -356,6 +357,7 @@ const StudentProfile = ({ student, lastExamScore, onClose, onLogout, syncTrigger
         action: 'open_store'
       });
       localStorage.setItem('moo_student_notifications', JSON.stringify(studentNotifs));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
   }, [student?.personal?.id, weeklyCommitment, lastExamScore, syncTrigger]);
 
@@ -397,6 +399,7 @@ const StudentProfile = ({ student, lastExamScore, onClose, onLogout, syncTrigger
     }
     setPinnedBadges(newPinned);
     localStorage.setItem('moo_pinned_badges', JSON.stringify(newPinned));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
   };
 
   let rankTitle = 'طالب مستجد';
@@ -708,6 +711,7 @@ const ExamResultNotification = ({ student }) => {
       const dismissed = JSON.parse(localStorage.getItem('moo_dismissed_results') || '[]');
       dismissed.push(notification.exam.id);
       localStorage.setItem('moo_dismissed_results', JSON.stringify(dismissed));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       setNotification(null);
     } catch {}
   };
@@ -742,6 +746,7 @@ const App = () => {
       if(raw && raw.includes('ط')) {
         raw = decodeURIComponent(escape(raw));
         localStorage.setItem('GLOBAL_ACADEMIC_MASTER', raw);
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
         window.location.reload();
       }
     } catch(e) {}
@@ -749,13 +754,16 @@ const App = () => {
 
   useEffect(() => {
     localStorage.setItem('moo_currentPage', currentPage);
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
   }, [currentPage]);
 
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem('moo_currentUser', JSON.stringify(currentUser));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     } else {
       localStorage.removeItem('moo_currentUser');
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
   }, [currentUser]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -770,20 +778,15 @@ const App = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [checkoutStatus, setCheckoutStatus] = useState('idle');
   const [studentBalance, setStudentBalance] = useState(() => {
-    // 🔥 إصلاح: نقرأ الرصيد من moo_wallets لو موجود، بدل ما نبدأ بـ 150 ثابت
-    // لو مش موجود نبدأ بـ 0 عشان المسئول هو اللي يشحن
     try {
       const wallets = JSON.parse(localStorage.getItem('moo_wallets') || '{}');
-      // مش عارفين id الطالب هنا بعد، هنحدده في useEffect بعدين
       return 0;
     } catch { return 0; }
   });
   const [successModal, setSuccessModal] = useState({ isVisible: false, message: '', type: 'success' });
 
-  // 🔥 الإصلاح: studentData الحقيقية للطالب تتخزن هنا عشان SettingsView وExamsView يقدروا يعدلوا عليها
   const [studentOverrides, setStudentOverrides] = useState({});
 
-  // 🔥 الإصلاح: handleSetStudentData بتقبل دالة أو object وتطبق التعديل على studentOverrides
   const handleSetStudentData = useCallback((updaterOrData) => {
     if (typeof updaterOrData === 'function') {
       setStudentOverrides(prev => {
@@ -800,24 +803,25 @@ const App = () => {
     if (currentUser && !currentUser.role) {
       let wallets = {};
       try { wallets = JSON.parse(localStorage.getItem('moo_wallets')) || {}; } catch { wallets = {}; }
-      const id = currentUser.id || 'AWS-2024-0001';
-      // 🔥 إصلاح: لو الطالب مش موجود في الـ wallets نبدأ بـ 0 مش 150
-      // المسئول هو اللي يشحن الرصيد من AdminDashboard
+      const id = currentUser?.personal?.id || currentUser?.id || 'AWS-2024-0001';
+      // تهيئة المحفظة: إذا دخل الطالب لأول مرة لا يوجد له محفظة، نضعها 0 أو 150
+      // يفضل أن يكون رصيد البدء 0 ويتم إدارته من AdminDashboard
       if (wallets[id] === undefined) {
         wallets[id] = 0;
         localStorage.setItem('moo_wallets', JSON.stringify(wallets));
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       }
       setStudentBalance(wallets[id]);
     }
   }, [currentUser, syncTrigger]);
 
-  // 🔥 إصلاح: اسمع على moo-sync عشان لو الـ daemon حدّث الـ wallets من السحابة نحدث الرصيد فوراً
+  // مستمع التزامن: يضمن بقاء moo-sync يعمل في الخلفية لتحديث wallets في جميع الشاشات المفتوحة
   useEffect(() => {
     const handleSync = () => {
       if (currentUser && !currentUser.role) {
         try {
           const wallets = JSON.parse(localStorage.getItem('moo_wallets') || '{}');
-          const id = currentUser.id || 'AWS-2024-0001';
+          const id = currentUser?.personal?.id || currentUser?.id || 'AWS-2024-0001';
           setStudentBalance(wallets[id] ?? 0);
         } catch { /* ignore */ }
       }
@@ -825,7 +829,7 @@ const App = () => {
     window.addEventListener('moo-sync', handleSync);
     return () => window.removeEventListener('moo-sync', handleSync);
   }, [currentUser]);
-  useEffect(() => { localStorage.setItem('moo_cart', JSON.stringify(cart)); }, [cart]);
+  useEffect(() => { localStorage.setItem('moo_cart', JSON.stringify(cart)); window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync')); }, [cart]);
 
   const handleCheckout = () => {
     if (cart.length === 0) return;
@@ -849,31 +853,36 @@ const App = () => {
       updatedMenu = updatedMenu.map(m => m.id === cartItem.id ? { ...m, quantity: Math.max(0, m.quantity - cartItem.cartQuantity) } : m);
     });
     localStorage.setItem('moo_cafeteria_menu', JSON.stringify(updatedMenu));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // 3. Create Order
     const existingOrders = JSON.parse(localStorage.getItem('moo_cafeteria_orders')) || [];
     const normalizedCart = cart.map(c => ({ ...c, cartQty: c.cartQuantity })); // Standardize with POS
     
+    const myId = currentUser?.personal?.id || currentUser?.id || 'مجهول';
+    const myName = currentUser?.personal?.name || currentUser?.name || 'طالب';
+
     const newOrder = {
       id: Date.now(),
-      studentName: currentUser?.name || 'طالب',
-      studentId: currentUser?.id || 'غير معروف',
+      studentName: myName,
+      studentId: myId,
       items: normalizedCart.map(c => `${c.name} (${c.cartQty})`).join(' + '),
       cart: normalizedCart, // Essential for Refund!
       total: cartTotal,
       date: new Date().toISOString(), // Standardized ISO Date
       status: 'pending',
-        source: 'student_portal'
+      source: 'student_portal'
     };
     localStorage.setItem('moo_cafeteria_orders', JSON.stringify([newOrder, ...existingOrders].slice(0, 100)));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // 4. Update Wallets
     const currentWallets = JSON.parse(localStorage.getItem('moo_wallets')) || {};
-    const myId = currentUser?.id;
-    if (myId) {
+    if (myId !== 'مجهول') {
       const currentBal = currentWallets[myId] || 0;
       currentWallets[myId] = Math.max(0, currentBal - cartTotal);
       localStorage.setItem('moo_wallets', JSON.stringify(currentWallets));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
     
     const newBalance = studentBalance - cartTotal;
@@ -882,22 +891,27 @@ const App = () => {
     // 5. Add to Vault
     const currentVault = parseFloat(localStorage.getItem('moo_school_vault')) || 0;
     localStorage.setItem('moo_school_vault', (currentVault + cartTotal).toString());
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // 6. Record transaction in wallet transactions
     const existingTransactions = JSON.parse(localStorage.getItem('moo_wallet_transactions')) || [];
     const purchaseTransaction = {
       id: Date.now() + 1,
-      studentId: currentUser?.id || 'غير معروف',
-      studentName: currentUser?.name || 'طالب',
+      studentId: myId,
+      studentName: myName,
       amount: cartTotal,
       type: 'subtract',
       date: new Date().toISOString(),
-      note: 'مشتريات عبر البوابة'
+      note: 'عملية شراء من المقصف الإلكتروني'
     };
     const updatedTransactions = [purchaseTransaction, ...existingTransactions].slice(0, 50);
-    localStorage.setItem('moo_wallet_transactions', JSON.stringify(updatedTransactions));
+      localStorage.setItem('moo_wallet_transactions', JSON.stringify(updatedTransactions));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
-    
+    // 7. Fire Sync Events!
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('moo-sync', { detail: { action: 'cafeteria_purchase' } }));
+
     setCart([]);
     setIsCartOpen(false);
     setCheckoutStatus('idle');
@@ -940,19 +954,24 @@ const App = () => {
         });
 
       localStorage.setItem('exams', JSON.stringify(normalized));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       localStorage.removeItem('moo_exams');
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       const teacherExams = JSON.parse(localStorage.getItem('moo_tests') || '[]');
       const reportsMap = {};
       normalized.forEach(ex => { if (ex.id && ex.reports?.length) reportsMap[ex.id] = ex.reports; });
       const updatedTeacher = teacherExams.map(ex => ({ ...ex, reports: reportsMap[ex.id] || ex.reports || [] }));
       localStorage.setItem('moo_tests', JSON.stringify(updatedTeacher));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
       const globalSchedule = JSON.parse(localStorage.getItem('moo_global_schedule') || '[]');
       if (Array.isArray(globalSchedule)) {
         const cleanedSchedule = globalSchedule.filter(item => item?.type !== 'exam');
         localStorage.setItem('moo_global_schedule', JSON.stringify(cleanedSchedule));
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       }
       localStorage.setItem('moo_exams_migrated', 'v2');
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     } catch (error) {
       console.error('Exam migration failed', error);
     }
@@ -982,6 +1001,7 @@ const App = () => {
         daySchedule: {},
       };
       localStorage.setItem('GLOBAL_ACADEMIC_MASTER', JSON.stringify(init));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
   }, []);
 
@@ -1035,6 +1055,7 @@ const App = () => {
         // التوافقية مع نظام الطالب القديم
         if (primaryHex !== '#7C3AED') {
             localStorage.setItem('moo_theme_color', JSON.stringify({ hex: primaryHex, rgb: `${r}, ${g}, ${b}` }));
+            window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
         }
       } catch { }
     }, [currentUser]);
@@ -1047,6 +1068,7 @@ const App = () => {
       if (id && store[id]) {
         store[id] = store[id].map(n => ({ ...n, isNew: false }));
         localStorage.setItem('moo_student_notifications', JSON.stringify(store));
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       }
     } catch { /* تجاهل الخطأ */ }
     setSyncTrigger(prev => prev + 1);
@@ -1060,6 +1082,7 @@ const App = () => {
       if (id && store[id]) {
         store[id] = store[id].filter(n => n.id !== notificationId);
         localStorage.setItem('moo_student_notifications', JSON.stringify(store));
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
         setSyncTrigger(prev => prev + 1);
       }
     } catch { /* ignore */ }
@@ -1122,6 +1145,7 @@ const App = () => {
       if (relevantGeneralNotifs.length > 0) {
         const updatedStore = { ...store, [currentUser.id]: syncedNotifications.slice(0, 50) };
         localStorage.setItem('moo_student_notifications', JSON.stringify(updatedStore));
+        window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
         // لا نقوم بحذف الإشعارات من moo_notifications لتصل لباقي الطلاب
       }
     } catch {

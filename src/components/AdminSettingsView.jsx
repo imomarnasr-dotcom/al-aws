@@ -26,6 +26,7 @@ const AdminSettingsView = ({ account, isDeputy }) => {
 
       staffList[myAccountIndex].name = nameForm;
       localStorage.setItem('moo_staff', JSON.stringify(staffList));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       
     } else {
       const adminCreds = JSON.parse(localStorage.getItem('moo_admin_credentials') || '{"password":"0000"}');
@@ -37,6 +38,7 @@ const AdminSettingsView = ({ account, isDeputy }) => {
 
       const newCreds = { ...adminCreds, name: nameForm };
       localStorage.setItem('moo_admin_credentials', JSON.stringify(newCreds));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
 
     setNameMsg({ text: '✅ تم تغيير الاسم بنجاح! سيتم تحديث الصفحة...', ok: true });
@@ -64,6 +66,7 @@ const AdminSettingsView = ({ account, isDeputy }) => {
 
       staffList[myAccountIndex].password = pwForm.newPw;
       localStorage.setItem('moo_staff', JSON.stringify(staffList));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       
     } else {
       const adminCreds = JSON.parse(localStorage.getItem('moo_admin_credentials') || '{"password":"0000"}');
@@ -75,6 +78,7 @@ const AdminSettingsView = ({ account, isDeputy }) => {
 
       const newCreds = { ...adminCreds, password: pwForm.newPw };
       localStorage.setItem('moo_admin_credentials', JSON.stringify(newCreds));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
 
     setPwMsg({ text: '✅ تم تغيير كلمة المرور بنجاح!', ok: true });
@@ -103,7 +107,9 @@ const AdminSettingsView = ({ account, isDeputy }) => {
 
   const saveThemeSettings = () => {
     localStorage.setItem('moo_theme_primary', theme.primary);
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     localStorage.setItem('moo_theme_bg', theme.bg);
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     setThemeMsg({ text: '✅ تم حفظ الثيم بنجاح!', ok: true });
     setTimeout(() => setThemeMsg({ text: '', ok: false }), 3000);
   };
@@ -114,6 +120,7 @@ const AdminSettingsView = ({ account, isDeputy }) => {
     const newVal = !magicCursor;
     setMagicCursor(newVal);
     localStorage.setItem('moo_magic_cursor', newVal.toString());
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     window.dispatchEvent(new Event('magic_cursor_toggled'));
   };
 

@@ -118,6 +118,7 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     const newHidden = [...hiddenAnnouncements, id];
     setHiddenAnnouncements(newHidden);
     localStorage.setItem('moo_hidden_announcements', JSON.stringify(newHidden));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
   };
 
   useEffect(() => {
@@ -165,7 +166,7 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       }
       return q;
     });
-    if (modified) localStorage.setItem('moo_question_bank', JSON.stringify(migrated));
+    if (modified) localStorage.setItem('moo_question_bank', JSON.stringify(migrated)); window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     return migrated;
   });
 
@@ -184,6 +185,7 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       const updatedBank = [...questionBank, qToSave];
       setQuestionBank(updatedBank);
       localStorage.setItem('moo_question_bank', JSON.stringify(updatedBank));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
     setCurrentQ({ id: null, text: '', opt1: '', opt2: '', opt3: '', opt4: '', correctOpt: '1' });
     showToast('✅ تم حفظ السؤال');
@@ -250,6 +252,7 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     const updatedTests = newTest.id ? tests.map(t => t.id === testId ? testObj : t) : [...tests, testObj];
     setTests(updatedTests);
     localStorage.setItem('moo_tests', JSON.stringify(updatedTests));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     const allExams = JSON.parse(localStorage.getItem('exams') || '[]');
     const updatedExams = newTest.id ? allExams.map(ex => ex.id === testId ? globalExamObj : ex) : [...allExams, globalExamObj];
@@ -291,11 +294,13 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     const updatedTests = tests.filter(t => t.id !== id);
     setTests(updatedTests);
     localStorage.setItem('moo_tests', JSON.stringify(updatedTests));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     if (!started) {
       const allExams = JSON.parse(localStorage.getItem('exams') || '[]');
       const cleanedExams = allExams.filter(ex => ex.id !== id);
       localStorage.setItem('exams', JSON.stringify(cleanedExams));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     }
 
     const master = getGlobalMaster();
@@ -473,6 +478,7 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
     const updated = { ...savedPaperExamGrades, [examKey]: finalGrades };
     setSavedPaperExamGrades(updated);
     localStorage.setItem('moo_paper_exam_grades', JSON.stringify(updated));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     // إضافة للأرشيف
     const archiveEntry = {
@@ -1164,8 +1170,11 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
 
     attendanceHistory[recordKey] = todayRecord;
     localStorage.setItem('moo_attendance', JSON.stringify(attendanceHistory));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     localStorage.setItem('moo_student_notifications', JSON.stringify(studentNotifs));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     localStorage.setItem('moo_parent_notifications', JSON.stringify(parentNotifs));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     safeTimes.forEach(t => {
       if (t) {
@@ -1173,6 +1182,7 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       }
     });
     localStorage.setItem('moo_attendance_periods', JSON.stringify(attendancePeriods));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     const parsedData = {
       whitelist: students,
@@ -1189,12 +1199,14 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       return { ...s, totalClasses: stat.total, attendedClasses: stat.present, attendancePercentage: stat.percentage };
     });
     localStorage.setItem('moo_whitelist', JSON.stringify(refreshedStudents));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     const wasGraceMode = !!gracePeriodMode;
     if (gracePeriodMode) {
       const gracePeriods = JSON.parse(localStorage.getItem('moo_grace_periods') || '[]');
       const updatedGraces = gracePeriods.map(g => g.id === gracePeriodMode ? { ...g, status: 'pending_admin' } : g);
       localStorage.setItem('moo_grace_periods', JSON.stringify(updatedGraces));
+      window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
       setGracePeriodMode(null);
     }
 

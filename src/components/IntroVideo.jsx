@@ -6,10 +6,18 @@ export default function IntroVideo({ onFinished }) {
   const [hasError, setHasError] = useState(false);
   const videoRef = useRef(null);
 
+  const [isDesktop, setIsDesktop] = useState(false);
+
   useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768);
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
     // Show skip button after 2 seconds just in case they want to bypass it
     const timer = setTimeout(() => setShowSkip(true), 2000);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const handleVideoEnd = () => {
@@ -36,8 +44,8 @@ export default function IntroVideo({ onFinished }) {
         poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         onEnded={handleVideoEnd}
         onError={handleVideoError}
-        className="w-full h-full object-cover bg-[#111827]"
-        src="/intro.mp4"
+        className={`w-full h-full object-cover bg-[#111827] ${!isDesktop && 'object-[center_top]'}`}
+        src={isDesktop ? "/intro_desktop.mp4" : "/intro.mp4"}
       />
       
       {showSkip && (

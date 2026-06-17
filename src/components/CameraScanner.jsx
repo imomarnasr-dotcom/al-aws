@@ -206,6 +206,7 @@ const CameraScanner = () => {
     const allRecords = JSON.parse(localStorage.getItem('moo_daily_attendance_manual') || '{}');
     allRecords[todayDate] = newRecord;
     localStorage.setItem('moo_daily_attendance_manual', JSON.stringify(allRecords));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
 
     setScanResult({ student, status: 'success', message: scanStatus === 'متأخر' ? 'تم تسجيل الحضور (متأخر)' : 'تم تسجيل الحضور بنجاح' });
 

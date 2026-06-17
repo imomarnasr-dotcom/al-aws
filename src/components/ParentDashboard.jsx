@@ -240,6 +240,7 @@ const ParentDashboard = ({ studentData, onLogout }) => {
       senderType:  'parent',
     });
     localStorage.setItem('moo_complaints', JSON.stringify(all));
+    window.dispatchEvent(new Event('storage')); window.dispatchEvent(new CustomEvent('moo-sync'));
     setSubject(''); setMsgText('');
     setContactSuccess(true);
     setTimeout(() => setContactSuccess(false), 3500);
