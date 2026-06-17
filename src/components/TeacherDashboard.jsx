@@ -224,35 +224,6 @@ const TeacherDashboard = ({ onLogout, currentTeacherUser }) => {
       newTest.type = 'online';
     }
 
-    if (examMode === 'schedule') {
-      const conflictingLesson = globalSchedule.find(l =>
-        (l.classCode === newTest.classCode || l.stage === newTest.classCode) &&
-        l.day === targetDayName &&
-        l.time === newTest.time &&
-        l.type !== 'break' && !l.isBreak
-      );
-
-      if (conflictingLesson) {
-        const confirmSwap = window.confirm(`⚠️ سيتم تحويل حصتك المسجلة في (${newTest.time}) إلى اختبار.\nهل أنت متأكد؟`);
-        if (!confirmSwap) return showToast('تم إلغاء العملية.');
-
-        finalSchedule = finalSchedule.map(l =>
-          l.id === conflictingLesson.id ? { ...l, type: 'exam', subject: newTest.title } : l
-        );
-      } else {
-        finalSchedule.push({
-          id: Date.now().toString(),
-          instructor: teacherProfile.name,
-          subject: newTest.title,
-          day: targetDayName,
-          time: newTest.time,
-          classCode: newTest.classCode,
-          stage: newTest.classCode,
-          type: 'exam'
-        });
-      }
-    }
-
     const testId = newTest.id || Date.now().toString();
     const testObj = { ...newTest, id: testId, day: targetDayName, questions, questionsCount: questions.length, teacherName: teacherProfile.name };
 
