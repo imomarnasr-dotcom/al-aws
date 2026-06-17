@@ -34,14 +34,18 @@ export default function IntroVideo({ onFinished }) {
         muted
         onEnded={handleVideoEnd}
         onError={handleVideoError}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover scale-[1.05]"
         src="/intro.mp4"
       />
       
+      {/* Watermark Hider Overlay (Bottom Right) */}
+      <div className="absolute bottom-0 right-0 w-40 h-20 bg-[#111827] z-10" style={{ filter: 'blur(8px)' }}></div>
+      <div className="absolute bottom-0 right-0 w-32 h-16 bg-[#111827] z-10"></div>
+
       {showSkip && (
         <button
           onClick={handleVideoEnd}
-          className="absolute bottom-10 right-8 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/20 transition-all font-main flex items-center gap-2 animate-fade-in"
+          className="absolute bottom-10 right-8 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-6 py-2 rounded-full border border-white/20 transition-all font-main flex items-center gap-2 animate-fade-in z-20"
         >
           <span>تخطي</span>
           <Play size={16} className="rotate-180" />
