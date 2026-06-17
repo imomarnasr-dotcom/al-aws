@@ -13,7 +13,7 @@ const GENERAL_KEYS = [
   'moo_phases', 'moo_pinned_badges', 'moo_question_bank',
   'moo_saturday_enabled', 'moo_school_vault', 'moo_spent_points', 'moo_staff',
   'moo_store_purchases', 'moo_tests', 'moo_truancy_penalized',
-  'moo_wallet_transactions', 'moo_wallets', 'moo_young_classes', 'schoolMasterSchedule',
+  'moo_wallet_transactions', 'moo_young_classes', 'schoolMasterSchedule',
   'schoolTemplate', 'moo_attendance_periods'
 ];
 
@@ -23,6 +23,7 @@ const PARTITIONED_COLLECTIONS = {
   'moo_attendance': 'attendance',
   'moo_daily_attendance_manual': 'manual_attendance',
   'moo_grades': 'grades',
+  'moo_wallets': 'wallets',
   'moo_behavior_logs': 'behavior_logs',
   'moo_achievements': 'achievements',
   'moo_student_notifications': 'student_notifications',
@@ -104,7 +105,7 @@ export default function CloudSyncV3({ onReady }) {
                 if (idx > -1) currentLocal[idx] = data;
                 else currentLocal.push(data);
              } else {
-                currentLocal[docId] = data;
+                currentLocal[docId] = data.value !== undefined ? data.value : data;
              }
              changed = true;
           } else if (change.type === 'removed') {
