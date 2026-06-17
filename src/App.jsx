@@ -19,6 +19,7 @@ import CafeteriaAdminDashboard from './components/CafeteriaAdminDashboard';
 import ExamsView from './components/ExamsView';
 import ErrorBoundary from './components/ErrorBoundary';
 import CustomCursor from './components/CustomCursor';
+import IntroVideo from './components/IntroVideo';
 
 import SuccessModal from './components/SuccessModal';
 import AcademicStore from './components/AcademicStore';
@@ -74,70 +75,6 @@ export const STORE_ITEMS = [
   { id: 'emoji_alien', category: 'emoji', value: '👽', name: 'الفضائي', cost: 50, icon: '👽', desc: 'إيموجي المخلوق الفضائي' },
 ];
 
-/* --- Preloader (شاشة الدخول السينمائية) --- */
-const Preloader = () => {
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    // Auto-fix Mojibake
-    try {
-      let raw = localStorage.getItem('GLOBAL_ACADEMIC_MASTER');
-      if(raw && raw.includes('ط')) {
-        raw = decodeURIComponent(escape(raw));
-        localStorage.setItem('GLOBAL_ACADEMIC_MASTER', raw);
-        window.location.reload();
-      }
-    } catch(e) {}
-
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return (
-    <AnimatePresence>
-      {loading && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-          transition={{ duration: 0.8, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-royal-dark/95 backdrop-blur-md"
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: [0.8, 1.1, 1], opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="relative flex items-center justify-center w-24 h-24 mb-6 rounded-full shadow-gold bg-gradient-gold"
-          >
-            <span className="text-4xl text-royal-white">👑</span>
-            <motion.div
-              animate={{ scale: [1, 1.5, 2], opacity: [0.5, 0.2, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
-              className="absolute inset-0 rounded-full border-2 border-royal-gold"
-            />
-          </motion.div>
-          <motion.h1
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="text-3xl font-arabic font-bold text-transparent bg-clip-text bg-gradient-gold drop-shadow-lg"
-          >
-            مدارس الأوس الأهلية
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.5 }}
-            className="mt-2 text-royal-light font-arabic text-lg tracking-widest"
-          >
-            جاري تهيئة النظام السينمائي...
-          </motion.p>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-};
 
 /* --- Theme Control Panel --- */
 const ThemeControl = () => {
@@ -785,8 +722,21 @@ const ExamResultNotification = ({ student }) => {
 
 const App = () => {
   const [isDataReady, setIsDataReady] = useState(false);
+  const [introFinished, setIntroFinished] = useState(false);
   const [currentPage, setCurrentPage] = useState(() => localStorage.getItem('moo_currentPage') || 'landing');
   const [currentUser, setCurrentUser] = useState(() => JSON.parse(localStorage.getItem('moo_currentUser') || 'null'));
+
+  useEffect(() => {
+    // Auto-fix Mojibake
+    try {
+      let raw = localStorage.getItem('GLOBAL_ACADEMIC_MASTER');
+      if(raw && raw.includes('ط')) {
+        raw = decodeURIComponent(escape(raw));
+        localStorage.setItem('GLOBAL_ACADEMIC_MASTER', raw);
+        window.location.reload();
+      }
+    } catch(e) {}
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('moo_currentPage', currentPage);
@@ -1234,22 +1184,16 @@ const App = () => {
     <>
       <CloudSyncV3 onReady={() => setIsDataReady(true)} />
       
-      {!isDataReady ? (
-        <div className="h-screen w-screen flex flex-col items-center justify-center bg-gray-900 text-white font-main selection:bg-primary/20" dir="rtl">
-          <div className="relative mb-8">
-            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
-            <div className="animate-spin relative rounded-full h-20 w-20 border-t-4 border-b-4 border-primary"></div>
-          </div>
-          <h2 className="text-2xl font-bold mb-2">جاري تجهيز بيئة الأبطال...</h2>
-          <p className="text-gray-400 text-sm animate-pulse">تهيئة محرك الذاكرة الحي وقواعد البيانات الموزعة 🚀</p>
-        </div>
-      ) : (
+      {(!isDataReady || !introFinished) && (
+        <IntroVideo onFinished={() => setIntroFinished(true)} />
+      )}
+
+      {(isDataReady && introFinished) && (
       <>
       <ToastManager />
       <ConfirmManager />
       <ErrorBoundary>
       <CustomCursor />
-        <Preloader /> {/* 🪄 شاشة الدخول الاحترافية */}
 
         {/* 🪄 الخلفية العائمة تظل وراء كل شيء */}
         <div className="fixed inset-0 z-0 pointer-events-none">
