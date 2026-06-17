@@ -32,9 +32,11 @@ export default function IntroVideo({ onFinished }) {
         autoPlay
         playsInline
         muted
+        preload="auto"
+        poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         onEnded={handleVideoEnd}
         onError={handleVideoError}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover bg-[#111827]"
         src="/intro.mp4"
       />
       

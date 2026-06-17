@@ -1184,12 +1184,17 @@ const App = () => {
     <>
       <CloudSyncV3 onReady={() => setIsDataReady(true)} />
       
-      {(!isDataReady || !introFinished) && (
+      {(!introFinished) && (
         <IntroVideo onFinished={() => setIntroFinished(true)} />
       )}
 
-      {(isDataReady && introFinished) && (
-      <>
+      <div style={{
+        opacity: (isDataReady && introFinished) ? 1 : 0,
+        pointerEvents: (isDataReady && introFinished) ? 'auto' : 'none',
+        position: (!isDataReady || !introFinished) ? 'fixed' : 'relative',
+        top: (!isDataReady || !introFinished) ? '-9999px' : 'auto',
+        visibility: (!isDataReady || !introFinished) ? 'hidden' : 'visible',
+      }} className="w-full h-full min-h-screen">
       <ToastManager />
       <ConfirmManager />
       <ErrorBoundary>
@@ -1434,12 +1439,9 @@ const App = () => {
         type={successModal.type}
         onClose={() => setSuccessModal({ ...successModal, isVisible: false })}
       />
-      </>
-      )}
+      </div>
     </>
   );
 };
 
 export default App;
-
-
